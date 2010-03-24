@@ -4,7 +4,7 @@
   i.e. that the cacher correctly finds and caches all of the various urls represented here.
   It won't allow us to detect if the cacher is caching unexpected URLS.
 -->
-<otrunk id="">
+<otrunk id="de74ee26-53a6-4edd-b4b1-2f2c5ac7ec21">
   <imports>
     <import class="org.concord.otrunk.OTSystem" />
   </imports>
@@ -13,4 +13,3 @@
     </OTSystem>
   </objects>
 </otrunk>
-  

@@ -20,39 +20,41 @@ OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 
 SPEC_ROOT = File.expand_path(File.dirname(__FILE__))
 
-
-describe 'Java Proxy Cacher' do
+describe 'DIY Local Cacher' do
   include CacheHelper
   
   before(:each) do
-    @klass = Concord::JavaProxyCacher
-    @cache = File.join(SPEC_ROOT, "..", 'tmp','java_proxy')
+    @klass = Concord::DiyLocalCacher
+    @cache = File.join(SPEC_ROOT, '..', 'tmp','diy_local')
     mkdir_p(@cache)
     @cache += '/'
   end
   
+  def mockup(file)
+    return mock('activity',{:uuid => 'hash', :url => file})
+  end
+  
   after(:each) do
-    rm_rf(@cache)
+    # rm_rf(@cache)
   end
   
   describe 'empty otml' do
-    it 'should create a url map xml file' do
-      cache('empty.otml')
-      exists?('url_map.xml')
+    it 'should not create a url map xml file' do
+      cache('empty.otml', :activity => mockup('empty.otml'))
+      does_not_exist?('url_map.xml')
     end
   
     it 'should create a cached file of the original url' do
       url = File.join(SPEC_ROOT,'data','empty.otml')
-      expected_filename = ::Digest::SHA1.hexdigest(File.read(url))
-      cache('empty.otml')
-      exists?(expected_filename)
+      cache('empty.otml', :activity => mockup('empty.otml'))
+      exists?('hash.otml')
     end
   
-    it 'should create a cached header of the original url' do
+    it 'should not create a cached header of the original url' do
       url = File.join(SPEC_ROOT,'data','empty.otml')
-      expected_filename = ::Digest::SHA1.hexdigest(File.read(url))
-      cache('empty.otml')
-      exists?("#{expected_filename}.hdrs")
+      expected_filename = 'hash.otml'
+      cache('empty.otml', :activity => mockup('empty.otml'))
+      does_not_exist?("#{expected_filename}.hdrs")
     end
   end
   
@@ -66,7 +68,7 @@ describe 'Java Proxy Cacher' do
       expected_files.flatten!
       expected_files << 'url_map.xml'
 
-      cache('standard_uri.otml')
+      cache('standard_uri.otml', :activity => mockup('empty.otml'))
       
       cache_size.should == 7
       expected_files.each do |f|
@@ -89,7 +91,7 @@ describe 'Java Proxy Cacher' do
       expected_files.flatten!
       expected_files << 'url_map.xml'
       
-      cache('element_reference.otml')
+      cache('element_reference.otml', :activity => mockup('empty.otml'))
       
       cache_size.should == 15
       expected_files.each do |f|
@@ -110,7 +112,7 @@ describe 'Java Proxy Cacher' do
       expected_files.flatten!
       expected_files << 'url_map.xml'
       
-      cache('recursion.otml')
+      cache('recursion.otml', :activity => mockup('empty.otml'))
       
       cache_size.should == 11
       expected_files.each do |f|

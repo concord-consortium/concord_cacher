@@ -1,0 +1,22 @@
+<otrunk id="67daad67-8762-4f5a-8c7c-50b7c3544c0b">
+  <imports>
+    <import class="org.concord.otrunk.OTSystem" />
+  </imports>
+  <objects>  
+    <OTSystem local_id="system">
+      <root>
+        <OTText>
+          <!-- Absolute references -->
+          <a href="http://loops.diy.concord.org/">Visit the Concord Website</a>
+          <img src="http://portal.concord.org/images/icons/chart_bar.png" />
+          <OTBlob imageBytes="http://portal.concord.org/images/icons/chart_pie.png" />
+          
+          <!-- relative references -->
+          <a href="resources/text.txt">Read some text</a>
+          <img src="resources/delete.png" />
+          <OTBlob imageBytes="resources/chart_line.png" />
+        </OTText>
+      </root>
+    </OTSystem>
+  </objects>
+</otrunk>

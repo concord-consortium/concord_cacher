@@ -2,6 +2,7 @@ class ::Concord::Cacher
   require 'rubygems'
   require 'open-uri'
   require 'cgi'
+  require 'rexml/document'
   
   DEBUG = false
 
@@ -77,7 +78,13 @@ class ::Concord::Cacher
     write_property_map(@cache_dir + filename + ".hdrs", @content_headers)
     @url_to_hash_map[@otml_url + @filename + ".otml"] = filename
     # open the otml file from the specified url or grab the embedded content
-    parse_file("#{@cache_dir}#{@filename}", @content, @cache_dir, URI.parse(@otml_url), true)
+    uri = URI.parse(@otml_url)
+    if uri.relative?
+      # we need the main URI to be absolute so that we can use it to resolve references
+      file_root = URI.parse("file:///")
+      uri = file_root.merge(uri)
+    end
+    parse_file("#{@cache_dir}#{@filename}", @content, @cache_dir, uri, true)
 
     puts "\nThere were #{@errors.length} artifacts with errors.\n" if @verbose
     @errors.each do |k,v|
@@ -127,7 +134,7 @@ class ::Concord::Cacher
       	begin
           resource_content = ""
           resource_headers = {}
-          open(resource_url.to_s) do |r|
+          open(resource_url.scheme == 'file' ? resource_url.path : resource_url.to_s) do |r|
             resource_headers = r.respond_to?("meta") ? r.meta : {}
             resource_headers['_http_version'] = "HTTP/1.1 #{r.respond_to?("status") ? r.status.join(" ") : "200 OK"}"
             resource_content = r.read
@@ -205,7 +212,7 @@ class ::Concord::Cacher
   end
   
   def load_existing_map
-    map_content = REXML::Document.new(File.new(@cache_dir + "url_map.xml")).root
+    map_content = ::REXML::Document.new(File.new(@cache_dir + "url_map.xml")).root
     map_content.elements.each("entry") do |entry|
       k = entry.attributes["key"]
       if ! (@url_to_hash_map.include? k)
