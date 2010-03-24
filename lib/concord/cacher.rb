@@ -1,4 +1,8 @@
-class ConcordCacher
+class ::Concord::Cacher
+  require 'rubygems'
+  require 'open-uri'
+  require 'cgi'
+  
   DEBUG = false
 
   #   scan for anything that matches (http://[^'"]+)
@@ -13,11 +17,12 @@ class ConcordCacher
   attr_reader :otml_url, :cache_dir, :uuid, :errors
   
   def initialize(opts = {})
-    defaults = {:rewrite_urls => false}
+    defaults = {:rewrite_urls => false, :verbose => false}
     opts = defaults.merge(opts)
     raise InvalidArgumentError("Must include :url, and :cache_dir in the options hash.") unless opts[:url] && opts[:cache_dir]
     @rewrite_urls = opts[:rewrite_urls]
     @cache_dir = opts[:cache_dir]
+    @verbose = opts[:verbose]
     url = opts[:url]
     @filename = File.basename(url, ".otml")
     @content = ""
@@ -74,18 +79,18 @@ class ConcordCacher
     # open the otml file from the specified url or grab the embedded content
     parse_file("#{@cache_dir}#{@filename}", @content, @cache_dir, URI.parse(@otml_url), true)
 
-    puts "\nThere were #{@errors.length} artifacts with errors.\n"
+    puts "\nThere were #{@errors.length} artifacts with errors.\n" if @verbose
     @errors.each do |k,v|
-    	puts "In #{k}:"
+    	puts "In #{k}:" if @verbose
     	v.uniq.each do |e|
-        puts "    #{e}"
+        puts "    #{e}" if @verbose
       end
     end
   end
   
   def parse_file(orig_filename, content, cache_dir, parent_url, recurse)
     short_filename = /\/([^\/]+)$/.match(orig_filename)[1]
-    print "\n#{short_filename}: "
+    print "\n#{short_filename}: " if @verbose
     lines = content.split("\n")
     lines.each do |line|
       line = CGI.unescapeHTML(line)
@@ -97,13 +102,13 @@ class ConcordCacher
         match_indexes << match.begin(1)
         #   get the resource from that location, save it locally
         match_url = match[1].gsub(/\s+/,"").gsub(/[\?\#&;=\+\$,<>"\{\}\|\\\^\[\]].*$/,"")
-        # puts("pre: #{match[1]}, post: #{match_url}")
+        # puts("pre: #{match[1]}, post: #{match_url}") if DEBUG
         begin
           resource_url = URI.parse(CGI.unescapeHTML(match_url))
         rescue
           @errors[parent_url] ||= []
         @errors[parent_url] << "Bad URL: '#{CGI.unescapeHTML(match_url)}', skipping."
-          print 'x'
+          print 'x' if @verbose
           next
         end
         if (resource_url.relative?)
@@ -115,7 +120,7 @@ class ConcordCacher
         resourceFile = resourceFile.gsub(/\/$/,"")
 
         if (resourceFile.length < 1) || ALWAYS_SKIP_REGEX.match(resourceFile)
-          print "S"
+          print "S" if @verbose
           next
         end
         
@@ -130,7 +135,7 @@ class ConcordCacher
 				rescue OpenURI::HTTPError, Timeout::Error, Errno::ENOENT => e
           @errors[parent_url] ||= []
           @errors[parent_url] << "Problem getting file: #{resource_url.to_s},   Error: #{e}"
-          print 'X'
+          print 'X' if @verbose
 					next
 				end
 
@@ -140,7 +145,7 @@ class ConcordCacher
         # skip downloading already existing files.
         # because we're working with sha1 hashes we can be reasonably certain the content is a complete match
         if File.exist?(cache_dir + localFile)
-          print 's'
+          print 's' if @verbose
         else
           # if it's an otml/html file, we should parse it too (only one level down)
           if (recurse && (RECURSE_ONCE_REGEX.match(resourceFile) || RECURSE_FOREVER_REGEX.match(resourceFile)))
@@ -154,24 +159,24 @@ class ConcordCacher
 							rescue OpenURI::HTTPError => e
                 @errors[parent_url] ||= []
                 @errors[parent_url] << "Problem getting or writing file: #{resource_url.to_s},   Error: #{e}"
-                print 'X'
+                print 'X' if @verbose
 								next
 							end
           end
           begin
             write_resource(cache_dir + localFile, resource_content)
             write_property_map(cache_dir + localFile + ".hdrs", resource_headers)
-            print "."
+            print "." if @verbose
           rescue Exception => e
             @errors[parent_url] ||= []
             @errors[parent_url] << "Problem getting or writing file: #{resource_url.to_s},   Error: #{e}"
-            print 'X'
+            print 'X' if @verbose
           end
         end
       end
     end
 
-    print ".\n"
+    print ".\n" if @verbose
   end
   
   def write_resource(filename, content)
@@ -206,7 +211,7 @@ class ConcordCacher
       if ! (@url_to_hash_map.include? k)
         val = entry.text
         @url_to_hash_map[k] = val
-        # puts "Adding previously defined url: #{k}  =>  #{val}"
+        # puts "Adding previously defined url: #{k}  =>  #{val}" if DEBUG
       end
     end
   end
