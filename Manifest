@@ -1,4 +1,4 @@
-README
+README.textile
 Rakefile
 lib/concord_cacher.rb
 lib/concord/cacher.rb
