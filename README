@@ -1,0 +1,21 @@
+h1. concord_cacher
+
+The concord_cacher gem provides support for locally caching a resource and all referenced resources in multiple different ways.
+It is intended for using with other Concord Consortium projects and not necessarily for outside projects.
+
+h3. install
+
+<pre><code>
+$ gem install concord_cacher
+</code></pre>
+
+h3. example
+
+<pre><code>
+$ irb
+> require 'rubygems'
+> require 'concord_cacher'
+>
+> cacher = Concord::JavaProxyCacher.new(:url => "http://some/url/to/cache", :cache_dir => "/some/local/dir/to/store/things")
+> cacher.cache
+</code></pre>
