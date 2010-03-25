@@ -1,7 +1,20 @@
 require 'rubygems'
+
+require 'rake'
 require 'spec/rake/spectask'
 
 require './lib/concord_cacher.rb'
+
+require 'echoe'
+Echoe.new('concord_cacher', '0.0.1') do |p|
+  p.description    = "concord_cacher provides support for locally caching a resource and all referenced resources in multiple different ways. It is intended for using with other Concord Consortium projects and not necessarily for outside projects."
+  p.summary        = "Support for locally caching a resource and all referenced resources in multiple different ways"
+  p.url            = "http://github.com/psndcsrv/concord_cacher"
+  p.author         = "Aaron Unger"
+  p.email          = "aunger @nospam@ concord.org"
+  p.ignore_pattern = ["tmp/*","pkg/*"]
+  p.development_dependencies = []
+end
 
 task :default => :spec
 Spec::Rake::SpecTask.new do |t|
