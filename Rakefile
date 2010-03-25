@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'spec/rake/spectask'
 
-require './lib/concord.rb'
+require './lib/concord_cacher.rb'
 
 task :default => :spec
 Spec::Rake::SpecTask.new do |t|

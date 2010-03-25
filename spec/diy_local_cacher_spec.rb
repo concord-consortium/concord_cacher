@@ -1,5 +1,5 @@
 begin
-  require 'concord'
+  require 'concord_cacher'
 rescue LoadError
   require File.join(File.dirname(__FILE__), '..','lib','concord.rb')
 end
