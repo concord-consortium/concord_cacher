@@ -19,3 +19,9 @@ $ irb
 > cacher = Concord::JavaProxyCacher.new(:url => "http://some/url/to/cache", :cache_dir => "/some/local/dir/to/store/things")
 > cacher.cache
 </code></pre>
+
+h3. tests
+
+<pre><code>
+$ rake spec
+</code></pre>
