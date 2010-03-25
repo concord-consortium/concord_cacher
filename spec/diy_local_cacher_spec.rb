@@ -204,6 +204,24 @@ describe 'DIY Local Cacher' do
         file_content.should match(Regexp.new(url))
       end
     end
+    
+    it 'should not get stuck when handling circular loops' do
+      expected_files = []
+      expected_files << 'hash.otml' # recursion.otml
+      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','loop1.otml'))
+      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','delete.png'))
+      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','loop2.otml'))
+      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','chart_line.png'))
+      
+      lambda {
+        cache('recursive_loop.otml', :activity => mockup('recursive_loop.otml'))
+      }.should_not raise_error(SystemStackError)
+      
+      cache_size.should == 5
+      expected_files.each do |f|
+        exists?(f)
+      end
+    end
   end
   
   describe 'embedded nlogo files' do

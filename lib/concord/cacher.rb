@@ -158,7 +158,7 @@ class ::Concord::Cacher
         
         # skip downloading already existing files.
         # because we're working with sha1 hashes we can be reasonably certain the content is a complete match
-        if File.exist?(cache_dir + localFile)
+        if File.exists?(cache_dir + localFile)
           print 's' if @verbose
         else
           # if it's an otml/html file, we should parse it too (only one level down)
@@ -169,6 +169,7 @@ class ::Concord::Cacher
 							  recurse_further = true
 						  end
 							begin
+							  write_resource(cache_dir + localFile, "") # touch the file so that we avoid recursion
                 resource_content = parse_file(cache_dir + resourceFile, resource_content, cache_dir, resource_url, recurse_further)
 							rescue OpenURI::HTTPError => e
                 @errors[parent_url] ||= []

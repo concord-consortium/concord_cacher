@@ -117,6 +117,27 @@ describe 'Java Proxy Cacher' do
         exists?(f)
       end
     end
+    
+    it 'should not get stuck when handling circular loops' do
+      expected_files = []
+      expected_files << '14a11cc1ba19ce76d651c93f8294009e3e46f0db' # recursive_loop.otml
+      expected_files << '2a564e6997c4a43bdfa3b0314e5bed7f9a5673ec' # resources/loop1.otml
+      expected_files << '8f0ebcb45d7ba71a541d4781329f4a6900c7ee65' # resources/delete.png
+      expected_files << '156b6f0a8885251ea5853cbebd1e9da5fedc00e0' # resources/loop2.otml
+      expected_files << 'd1cea238486aeeba9215d56bf71efc243754fe48' # resources/chart_line.png
+      expected_files << expected_files.collect{|f| f+".hdrs" } # headers for each file
+      expected_files.flatten!
+      expected_files << 'url_map.xml'
+      
+      lambda {
+        cache('recursive_loop.otml')
+      }.should_not raise_error(SystemStackError)
+      
+      cache_size.should == 11
+      expected_files.each do |f|
+        exists?(f)
+      end
+    end
   end
   
   describe 'embedded nlogo files' do
