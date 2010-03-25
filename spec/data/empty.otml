@@ -1,6 +1,6 @@
 <!--
   This is a pseudo-otml file which holds all sorts of ways to reference a file.
-  It won't actually load in OTrunk, and is only really useful to test positive results --
+  It won't actually load in OTrunk, and is only really useful to test positive results -
   i.e. that the cacher correctly finds and caches all of the various urls represented here.
   It won't allow us to detect if the cacher is caching unexpected URLS.
 -->

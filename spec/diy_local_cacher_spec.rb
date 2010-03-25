@@ -35,7 +35,7 @@ describe 'DIY Local Cacher' do
   end
   
   after(:each) do
-    # rm_rf(@cache)
+    rm_rf(@cache)
   end
   
   describe 'empty otml' do
@@ -61,41 +61,78 @@ describe 'DIY Local Cacher' do
   describe 'standard uri syntax' do
     it 'should cache 2 referenced files' do
       expected_files = []
-      expected_files << 'e954312036485d3ca1894265922d9bd9491bf59e' # standard_uri.otml
-      expected_files << '8f0ebcb45d7ba71a541d4781329f4a6900c7ee65' # http://portal.concord.org/images/icons/delete.png
-      expected_files << '21b8b442e4449f642fcbd6796f4f0f937ec6c70d' # https://mail.google.com/mail/images/2/5/mountains/base/gmail_solid_white.png
-      expected_files << expected_files.collect{|f| f+".hdrs" } # headers for each file
-      expected_files.flatten!
-      expected_files << 'url_map.xml'
+      expected_files << 'hash.otml' # standard_uri.otml
+      expected_files << ::Digest::SHA1.hexdigest('http://portal.concord.org/images/icons/delete.png')
+      expected_files << ::Digest::SHA1.hexdigest('https://mail.google.com/mail/images/2/5/mountains/base/gmail_solid_white.png')
 
-      cache('standard_uri.otml', :activity => mockup('empty.otml'))
+      cache('standard_uri.otml', :activity => mockup('standard_uri.otml'))
       
-      cache_size.should == 7
+      cache_size.should == 3
       expected_files.each do |f|
         exists?(f)
       end
+      
+      
+    end
+    
+    it 'should rewrite the urls in the main otml file' do
+      cache('standard_uri.otml', :activity => mockup('standard_uri.otml'))
+      
+      file_content = File.read(File.join(@cache,'hash.otml'))
+      
+      file_content.should_not match(/http:/)
+      file_content.should match(::Digest::SHA1.hexdigest('http://portal.concord.org/images/icons/delete.png'))
+      file_content.should match(::Digest::SHA1.hexdigest('https://mail.google.com/mail/images/2/5/mountains/base/gmail_solid_white.png'))
     end
   end
   
   describe 'element references syntax' do
     it 'should cache 6 referenced files' do
       expected_files = []
-      expected_files << '9f945e576290efa874842b4ee07ab437d9d94a67' # element_reference.otml
-      expected_files << 'd9a2565586307e2924c953dfe788154749e93799' # http://loops.diy.concord.org/
-      expected_files << '4e9576a56db3d142113b8905d7aa93e31c9f441b' # http://portal.concord.org/images/icons/chart_bar.png
-      expected_files << '41f082b7e69a399679a47acfdcd7e7a204e49745' # http://portal.concord.org/images/icons/chart_pie.png
-      expected_files << 'cbe7ac86926fd3b8aa8659842a1d8c299d8966a7' # resources/text.txt
-      expected_files << '8f0ebcb45d7ba71a541d4781329f4a6900c7ee65' # resources/delete.png
-      expected_files << 'd1cea238486aeeba9215d56bf71efc243754fe48' # resources/chart_line.png
-      expected_files << expected_files.collect{|f| f+".hdrs" } # headers for each file
-      expected_files.flatten!
-      expected_files << 'url_map.xml'
+      expected_files << 'hash.otml' # element_reference.otml
+      expected_files << ::Digest::SHA1.hexdigest('http://loops.diy.concord.org/')
+      expected_files << ::Digest::SHA1.hexdigest('http://portal.concord.org/images/icons/chart_bar.png')
+      expected_files << ::Digest::SHA1.hexdigest('http://portal.concord.org/images/icons/chart_pie.png')
+      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','text.txt'))
+      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','delete.png'))
+      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','chart_line.png'))
       
-      cache('element_reference.otml', :activity => mockup('empty.otml'))
+      cache('element_reference.otml', :activity => mockup('element_reference.otml'))
       
-      cache_size.should == 15
+      cache_size.should == 7
       expected_files.each do |f|
         exists?(f)
+      end
+    end
+    
+    it 'should rewrite the urls in the main otml file' do
+      expected_urls = []
+      unexpected_urls = []
+      unexpected_urls << 'http://loops.diy.concord.org/'
+      unexpected_urls << 'http://portal.concord.org/images/icons/chart_bar.png'
+      unexpected_urls << 'http://portal.concord.org/images/icons/chart_pie.png'
+      unexpected_urls << File.join('resources','text.txt')
+      unexpected_urls << File.join('resources','delete.png')
+      unexpected_urls << File.join('resources','chart_line.png')
+      
+      unexpected_urls.each do |url|
+        if url =~ /^http/
+          expected_urls << ::Digest::SHA1.hexdigest(url)
+        else
+          expected_urls << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data',url))
+        end
+      end
+      
+      cache('element_reference.otml', :activity => mockup('element_reference.otml'))
+      
+      file_content = File.read(File.join(@cache,'hash.otml'))
+      
+      unexpected_urls.each do |url|
+        file_content.should_not match(Regexp.new(url))
+      end
+      
+      expected_urls.each do |url|
+        file_content.should match(Regexp.new(url))
       end
     end
   end
@@ -103,20 +140,68 @@ describe 'DIY Local Cacher' do
   describe 'recursive references' do
     it 'should cache 4 referenced files in otml files' do
       expected_files = []
-      expected_files << 'dbbd46b446a205047cfbf32e7af350a73c38848d' # recursion.otml
-      expected_files << 'cdc3d425b0ac9c3e89e1b79e0ad8a07c09bcedbd' # resources/recurse1.otml
-      expected_files << '8f0ebcb45d7ba71a541d4781329f4a6900c7ee65' # resources/delete.png
-      expected_files << '10f39c75f40386e8fbbb9320b6e77f3bd12b0f1d' # resources/recurse2.otml
-      expected_files << 'd1cea238486aeeba9215d56bf71efc243754fe48' # resources/chart_line.png
-      expected_files << expected_files.collect{|f| f+".hdrs" } # headers for each file
-      expected_files.flatten!
-      expected_files << 'url_map.xml'
+      expected_files << 'hash.otml' # recursion.otml
+      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','recurse1.otml'))
+      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','delete.png'))
+      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','recurse2.otml'))
+      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','chart_line.png'))
       
-      cache('recursion.otml', :activity => mockup('empty.otml'))
+      cache('recursion.otml', :activity => mockup('recursion.otml'))
       
-      cache_size.should == 11
+      cache_size.should == 5
       expected_files.each do |f|
         exists?(f)
+      end
+    end
+    
+    it 'should rewrite urls in first level recursion otml' do
+      recurse_otml = ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','recurse1.otml'))
+      
+      expected_urls = []
+      unexpected_urls = []
+      
+      unexpected_urls << File.join('resources','recurse2.otml')
+      unexpected_urls << File.join('resources','delete.png')
+      
+      unexpected_urls.each do |url|
+        expected_urls << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data',url))
+      end
+      
+      cache('recursion.otml', :activity => mockup('recursion.otml'))
+      
+      file_content = File.read(File.join(@cache,recurse_otml))
+      
+      unexpected_urls.each do |url|
+        file_content.should_not match(Regexp.new(url))
+      end
+      
+      expected_urls.each do |url|
+        file_content.should match(Regexp.new(url))
+      end
+    end
+    
+    it 'should rewrite urls in second level recursion otml' do
+      recurse_otml = ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','recurse2.otml'))
+      
+      expected_urls = []
+      unexpected_urls = []
+
+      unexpected_urls << File.join('resources','chart_line.png')
+      
+      unexpected_urls.each do |url|
+        expected_urls << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data',url))
+      end
+      
+      cache('recursion.otml', :activity => mockup('recursion.otml'))
+      
+      file_content = File.read(File.join(@cache,recurse_otml))
+      
+      unexpected_urls.each do |url|
+        file_content.should_not match(Regexp.new(url))
+      end
+      
+      expected_urls.each do |url|
+        file_content.should match(Regexp.new(url))
       end
     end
   end

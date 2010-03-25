@@ -18,12 +18,14 @@ class ::Concord::Cacher
   attr_reader :otml_url, :cache_dir, :uuid, :errors
   
   def initialize(opts = {})
-    defaults = {:rewrite_urls => false, :verbose => false}
+    defaults = {:rewrite_urls => false, :verbose => false, :cache_headers => true, :create_map => true}
     opts = defaults.merge(opts)
     raise InvalidArgumentError("Must include :url, and :cache_dir in the options hash.") unless opts[:url] && opts[:cache_dir]
     @rewrite_urls = opts[:rewrite_urls]
     @cache_dir = opts[:cache_dir]
     @verbose = opts[:verbose]
+    @cache_headers = opts[:cache_headers]
+    @create_map = opts[:create_map]
     url = opts[:url]
     @filename = File.basename(url, ".otml")
     @content = ""
@@ -56,7 +58,7 @@ class ::Concord::Cacher
 	def cache
 	  copy_otml_to_local_cache
   	
-  	write_url_to_hash_map
+  	write_url_to_hash_map if @create_map
 	end
 	
 	def generate_main_filename
@@ -74,9 +76,7 @@ class ::Concord::Cacher
   def copy_otml_to_local_cache
     # save the file in the local server directories
     filename = generate_main_filename
-    write_resource(@cache_dir + filename, @content)
-    write_property_map(@cache_dir + filename + ".hdrs", @content_headers)
-    @url_to_hash_map[@otml_url + @filename + ".otml"] = filename
+
     # open the otml file from the specified url or grab the embedded content
     uri = URI.parse(@otml_url)
     if uri.relative?
@@ -84,7 +84,11 @@ class ::Concord::Cacher
       file_root = URI.parse("file:///")
       uri = file_root.merge(uri)
     end
-    parse_file("#{@cache_dir}#{@filename}", @content, @cache_dir, uri, true)
+    @content = parse_file("#{@cache_dir}#{@filename}", @content, @cache_dir, uri, true)
+    
+    write_resource(@cache_dir + filename, @content)
+    write_property_map(@cache_dir + filename + ".hdrs", @content_headers) if @cache_headers
+    @url_to_hash_map[@otml_url + @filename + ".otml"] = filename
 
     puts "\nThere were #{@errors.length} artifacts with errors.\n" if @verbose
     @errors.each do |k,v|
@@ -98,6 +102,7 @@ class ::Concord::Cacher
   def parse_file(orig_filename, content, cache_dir, parent_url, recurse)
     short_filename = /\/([^\/]+)$/.match(orig_filename)[1]
     print "\n#{short_filename}: " if @verbose
+    processed_lines = []
     lines = content.split("\n")
     lines.each do |line|
       line = CGI.unescapeHTML(line)
@@ -148,6 +153,8 @@ class ::Concord::Cacher
 
         localFile = generate_filename(:content => resource_content, :url => resource_url)
         @url_to_hash_map[resource_url.to_s] = localFile
+        line.sub!(match_url.to_s,localFile.to_s) if @rewrite_urls
+        
         
         # skip downloading already existing files.
         # because we're working with sha1 hashes we can be reasonably certain the content is a complete match
@@ -172,7 +179,7 @@ class ::Concord::Cacher
           end
           begin
             write_resource(cache_dir + localFile, resource_content)
-            write_property_map(cache_dir + localFile + ".hdrs", resource_headers)
+            write_property_map(cache_dir + localFile + ".hdrs", resource_headers) if @cache_headers
             print "." if @verbose
           rescue Exception => e
             @errors[parent_url] ||= []
@@ -181,9 +188,11 @@ class ::Concord::Cacher
           end
         end
       end
+      processed_lines << line
     end
 
     print ".\n" if @verbose
+    return processed_lines.join("\n")
   end
   
   def write_resource(filename, content)
