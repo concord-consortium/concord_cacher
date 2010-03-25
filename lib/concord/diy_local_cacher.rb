@@ -3,7 +3,7 @@ class ::Concord::DiyLocalCacher < ::Concord::Cacher
   require 'digest/sha1'
   
   def initialize(opts = {})
-    raise InvalidArgumentError "Must include :activity in the options hash." unless opts[:activity]
+    raise InvalidArgumentError, "Must include :activity in the options hash." unless opts[:activity]
     @activity = opts[:activity]
     opts[:cache_headers] ||= false
     opts[:create_map] ||= false
@@ -20,7 +20,7 @@ class ::Concord::DiyLocalCacher < ::Concord::Cacher
   end
   
   def generate_filename(opts = {})
-    raise InvalidArgumentError("Must include :url key in opts") unless opts[:url]
+    raise InvalidArgumentError, "Must include :url key in opts" unless opts[:url]
     url = opts[:url]
     if url.kind_of?(::URI) && url.scheme == 'file'
       url = url.path

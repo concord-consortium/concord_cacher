@@ -20,7 +20,7 @@ class ::Concord::Cacher
   def initialize(opts = {})
     defaults = {:rewrite_urls => false, :verbose => false, :cache_headers => true, :create_map => true}
     opts = defaults.merge(opts)
-    raise InvalidArgumentError("Must include :url, and :cache_dir in the options hash.") unless opts[:url] && opts[:cache_dir]
+    raise ArgumentError, "Must include :url, and :cache_dir in the options hash." unless opts[:url] && opts[:cache_dir]
     @rewrite_urls = opts[:rewrite_urls]
     @cache_dir = opts[:cache_dir]
     @verbose = opts[:verbose]
@@ -62,15 +62,15 @@ class ::Concord::Cacher
 	end
 	
 	def generate_main_filename
-	  raise NotImplementedError("You should be using this class through one of its sub-classes!")
+	  raise NotImplementedError, "You should be using this class through one of its sub-classes!"
 	end
 	
 	def generate_filename(opts = {})
-	  raise NotImplementedError("You should be using this class through one of its sub-classes!")
+	  raise NotImplementedError, "You should be using this class through one of its sub-classes!"
   end
   
   def generate_uuid
-    raise NotImplementedError("You should be using this class through one of its sub-classes!")
+    raise NotImplementedError, "You should be using this class through one of its sub-classes!"
   end
   
   def copy_otml_to_local_cache

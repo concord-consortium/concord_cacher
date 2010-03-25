@@ -10,7 +10,7 @@ class ::Concord::JavaProxyCacher < ::Concord::Cacher
   end
   
   def generate_filename(opts = {})
-    raise InvalidArgumentError("Must include :content key in opts") unless opts[:content]
+    raise InvalidArgumentError, "Must include :content key in opts" unless opts[:content]
     ::Digest::SHA1.hexdigest(opts[:content])
   end
 end
