@@ -1,6 +1,7 @@
 class ::Concord::DiyLocalCacher < ::Concord::Cacher
   require 'uri'
   require 'digest/sha1'
+  require 'fileutils'
   
   def initialize(opts = {})
     raise InvalidArgumentError, "Must include :activity in the options hash." unless opts[:activity]
@@ -21,11 +22,14 @@ class ::Concord::DiyLocalCacher < ::Concord::Cacher
   
   def generate_filename(opts = {})
     raise InvalidArgumentError, "Must include :url key in opts" unless opts[:url]
-    url = opts[:url]
-    if url.kind_of?(::URI) && url.scheme == 'file'
-      url = url.path
-    end
-    url = url.to_s
-    return ::Digest::SHA1.hexdigest(url)
+    raise InvalidArgumentError, ":url value must be an instance of URI" unless opts[:url].kind_of?(::URI)
+    uri = opts[:url]
+    uri_path = uri.path.split('/')
+    uri_path = ["","index.html"] if uri_path.size == 0
+    uri_path.unshift("") if uri_path.size == 1
+    file_dir = File.join("#{uri.scheme}","#{uri.host}","#{uri.port}",uri_path[0..-2])
+    file = uri_path[-1]
+    mkdir_p(File.join(@cache_dir,file_dir))
+    return File.join(file_dir,file)
   end
 end

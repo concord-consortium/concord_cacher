@@ -8,6 +8,7 @@ module CacheHelper
   def exists?(file)
     f = File.join(@cache,file)
     File.should be_exists(f)
+    File.should be_file(f)
   end
   
   def does_not_exist?(file)
@@ -16,6 +17,6 @@ module CacheHelper
   end
 
   def cache_size
-    Dir.glob(@cache + "/*").size
+    Dir.glob(@cache + "/**/*").select{|f| File.file?(f) }.size
   end
 end

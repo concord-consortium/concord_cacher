@@ -30,12 +30,31 @@ describe 'DIY Local Cacher' do
     @cache += '/'
   end
   
+  after(:each) do
+    rm_rf(@cache)
+  end
+  
   def mockup(file)
     return mock('activity',{:uuid => 'hash', :url => file})
   end
   
-  after(:each) do
-    rm_rf(@cache)
+  def filename_for(url, parent=nil)
+    uri = nil
+    if parent
+      parent_uri = URI.parse(parent)
+      parent_uri = URI.parse("file:///").merge(parent_uri) if parent_uri.relative?
+        
+      uri = parent_uri.merge(url)
+    else
+      uri = URI.parse(url)
+    end
+
+    uri_path = uri.path.split('/')
+    uri_path = ["","index.html"] if uri_path.size == 0
+    uri_path.unshift("") if uri_path.size == 1
+    file_dir = File.join("#{uri.scheme}","#{uri.host}","#{uri.port}",uri_path[0..-2])
+    file = uri_path[-1]
+    return File.join(file_dir,file)
   end
   
   describe 'empty otml' do
@@ -62,8 +81,8 @@ describe 'DIY Local Cacher' do
     it 'should cache 2 referenced files' do
       expected_files = []
       expected_files << 'hash.otml' # standard_uri.otml
-      expected_files << ::Digest::SHA1.hexdigest('http://portal.concord.org/images/icons/delete.png')
-      expected_files << ::Digest::SHA1.hexdigest('https://mail.google.com/mail/images/2/5/mountains/base/gmail_solid_white.png')
+      expected_files << filename_for('http://portal.concord.org/images/icons/delete.png')
+      expected_files << filename_for('https://mail.google.com/mail/images/2/5/mountains/base/gmail_solid_white.png')
 
       cache('standard_uri.otml', :activity => mockup('standard_uri.otml'))
       
@@ -81,8 +100,8 @@ describe 'DIY Local Cacher' do
       file_content = File.read(File.join(@cache,'hash.otml'))
       
       file_content.should_not match(/http:/)
-      file_content.should match(::Digest::SHA1.hexdigest('http://portal.concord.org/images/icons/delete.png'))
-      file_content.should match(::Digest::SHA1.hexdigest('https://mail.google.com/mail/images/2/5/mountains/base/gmail_solid_white.png'))
+      file_content.should match(filename_for('http://portal.concord.org/images/icons/delete.png'))
+      file_content.should match(filename_for('https://mail.google.com/mail/images/2/5/mountains/base/gmail_solid_white.png'))
     end
   end
   
@@ -90,12 +109,12 @@ describe 'DIY Local Cacher' do
     it 'should cache 6 referenced files' do
       expected_files = []
       expected_files << 'hash.otml' # element_reference.otml
-      expected_files << ::Digest::SHA1.hexdigest('http://loops.diy.concord.org/')
-      expected_files << ::Digest::SHA1.hexdigest('http://portal.concord.org/images/icons/chart_bar.png')
-      expected_files << ::Digest::SHA1.hexdigest('http://portal.concord.org/images/icons/chart_pie.png')
-      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','text.txt'))
-      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','delete.png'))
-      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','chart_line.png'))
+      expected_files << filename_for('http://loops.diy.concord.org/')
+      expected_files << filename_for('http://portal.concord.org/images/icons/chart_bar.png')
+      expected_files << filename_for('http://portal.concord.org/images/icons/chart_pie.png')
+      expected_files << filename_for('resources/text.txt', File.join(SPEC_ROOT,'data','element_reference.otml'))
+      expected_files << filename_for('resources/delete.png', File.join(SPEC_ROOT,'data','element_reference.otml'))
+      expected_files << filename_for('resources/chart_line.png', File.join(SPEC_ROOT,'data','element_reference.otml'))
       
       cache('element_reference.otml', :activity => mockup('element_reference.otml'))
       
@@ -117,9 +136,9 @@ describe 'DIY Local Cacher' do
       
       unexpected_urls.each do |url|
         if url =~ /^http/
-          expected_urls << ::Digest::SHA1.hexdigest(url)
+          expected_urls << filename_for(url)
         else
-          expected_urls << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data',url))
+          expected_urls << filename_for(url, File.join(SPEC_ROOT,'data','element_reference.otml'))
         end
       end
       
@@ -128,7 +147,7 @@ describe 'DIY Local Cacher' do
       file_content = File.read(File.join(@cache,'hash.otml'))
       
       unexpected_urls.each do |url|
-        file_content.should_not match(Regexp.new(url))
+        file_content.should_not match(Regexp.new('"'+url))
       end
       
       expected_urls.each do |url|
@@ -141,10 +160,10 @@ describe 'DIY Local Cacher' do
     it 'should cache 4 referenced files in otml files' do
       expected_files = []
       expected_files << 'hash.otml' # recursion.otml
-      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','recurse1.otml'))
-      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','delete.png'))
-      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','recurse2.otml'))
-      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','chart_line.png'))
+      expected_files << filename_for('resources/recurse1.otml', File.join(SPEC_ROOT,'data','recursion.otml'))
+      expected_files << filename_for('resources/delete.png', File.join(SPEC_ROOT,'data','recursion.otml'))
+      expected_files << filename_for('resources/recurse2.otml', File.join(SPEC_ROOT,'data','recursion.otml'))
+      expected_files << filename_for('resources/chart_line.png', File.join(SPEC_ROOT,'data','recursion.otml'))
       
       cache('recursion.otml', :activity => mockup('recursion.otml'))
       
@@ -155,7 +174,7 @@ describe 'DIY Local Cacher' do
     end
     
     it 'should rewrite urls in first level recursion otml' do
-      recurse_otml = ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','recurse1.otml'))
+      recurse_otml = filename_for('resources/recurse1.otml', File.join(SPEC_ROOT,'data','recursion.otml'))
       
       expected_urls = []
       unexpected_urls = []
@@ -164,7 +183,7 @@ describe 'DIY Local Cacher' do
       unexpected_urls << File.join('resources','delete.png')
       
       unexpected_urls.each do |url|
-        expected_urls << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data',url))
+        expected_urls << filename_for(url, File.join(SPEC_ROOT,'data','recursion.otml'))
       end
       
       cache('recursion.otml', :activity => mockup('recursion.otml'))
@@ -172,7 +191,7 @@ describe 'DIY Local Cacher' do
       file_content = File.read(File.join(@cache,recurse_otml))
       
       unexpected_urls.each do |url|
-        file_content.should_not match(Regexp.new(url))
+        file_content.should_not match(Regexp.new('"'+url))
       end
       
       expected_urls.each do |url|
@@ -181,7 +200,7 @@ describe 'DIY Local Cacher' do
     end
     
     it 'should rewrite urls in second level recursion otml' do
-      recurse_otml = ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','recurse2.otml'))
+      recurse_otml = recurse_otml = filename_for('resources/recurse2.otml', File.join(SPEC_ROOT,'data','recursion.otml'))
       
       expected_urls = []
       unexpected_urls = []
@@ -189,7 +208,7 @@ describe 'DIY Local Cacher' do
       unexpected_urls << File.join('resources','chart_line.png')
       
       unexpected_urls.each do |url|
-        expected_urls << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data',url))
+        expected_urls << filename_for(url, File.join(SPEC_ROOT,'data','recursion.otml'))
       end
       
       cache('recursion.otml', :activity => mockup('recursion.otml'))
@@ -197,7 +216,7 @@ describe 'DIY Local Cacher' do
       file_content = File.read(File.join(@cache,recurse_otml))
       
       unexpected_urls.each do |url|
-        file_content.should_not match(Regexp.new(url))
+        file_content.should_not match(Regexp.new('"'+url))
       end
       
       expected_urls.each do |url|
@@ -208,10 +227,10 @@ describe 'DIY Local Cacher' do
     it 'should not get stuck when handling circular loops' do
       expected_files = []
       expected_files << 'hash.otml' # recursion.otml
-      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','loop1.otml'))
-      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','delete.png'))
-      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','loop2.otml'))
-      expected_files << ::Digest::SHA1.hexdigest(File.join(SPEC_ROOT,'data','resources','chart_line.png'))
+      expected_files << filename_for('resources/loop1.otml', File.join(SPEC_ROOT,'data','recursive_loop.otml'))
+      expected_files << filename_for('resources/delete.png', File.join(SPEC_ROOT,'data','recursive_loop.otml'))
+      expected_files << filename_for('resources/loop2.otml', File.join(SPEC_ROOT,'data','recursive_loop.otml'))
+      expected_files << filename_for('resources/chart_line.png', File.join(SPEC_ROOT,'data','recursive_loop.otml'))
       
       lambda {
         cache('recursive_loop.otml', :activity => mockup('recursive_loop.otml'))
