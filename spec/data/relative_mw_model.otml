@@ -1,0 +1,12 @@
+<otrunk id="6b230c1d-8816-4ef3-9c7a-b84a0da0b35f">
+  <imports>
+    <import class="org.concord.otrunk.OTSystem" />
+  </imports>
+  <objects>  
+    <OTSystem local_id="system">
+      <root>
+        <OTModelerPage id="ca708f02-9993-11de-b08f-05c163150ccf" name="Molecular workbench" authoredDataURL="resources/statesofmatter/statesOfMatterPage1.cml">
+      </root>
+    </OTSystem>
+  </objects>
+</otrunk>

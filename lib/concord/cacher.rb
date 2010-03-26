@@ -9,9 +9,10 @@ class ::Concord::Cacher
   #   scan for anything that matches (http://[^'"]+)
   URL_REGEX = /(http[s]?:\/\/[^'"]+)/i
   # the imageBytes can be referenced by a OTImage object
-  SRC_REGEX = /(?:src|href|imageBytes)[ ]?=[ ]?['"]([^'"]+)/i
+  SRC_REGEX = /(?:src|href|imageBytes|authoredDataURL)[ ]?=[ ]?['"]([^'"]+)/i
   NLOGO_REGEX = /import-drawing "([^"]+)"/i
-  ALWAYS_SKIP_REGEX = /^(mailto|jres)/i   # (resourceFile =~ /^mailto/) || (resourceFile =~ /^jres/)
+  MW_REGEX = /<resource>(.*?mml)<\/resource>/
+  ALWAYS_SKIP_REGEX = /^(mailto|jres)/i
   RECURSE_ONCE_REGEX = /html$/i  # (resourceFile =~ /otml$/ || resourceFile =~ /html/)
   RECURSE_FOREVER_REGEX = /(otml|cml|mml|nlogo)$/i
   
@@ -107,13 +108,20 @@ class ::Concord::Cacher
     lines.each do |line|
       line = CGI.unescapeHTML(line)
       match_indexes = []
-      while ( ((match = URL_REGEX.match(line)) && (! match_indexes.include?(match.begin(1)))) ||
-              ((match = SRC_REGEX.match(line)) && (! match_indexes.include?(match.begin(1)))) ||
-              (/.*\.nlogo/.match(short_filename) && (match = NLOGO_REGEX.match(line)) && (! match_indexes.include?(match.begin(1))))  )
+      while (
+        ( match = (
+            URL_REGEX.match(line) ||
+            SRC_REGEX.match(line) ||
+            (/.*\.nlogo/.match(short_filename) ? NLOGO_REGEX.match(line) : nil) ||
+            (/.*\.(:?cml|mml)/.match(short_filename) ? MW_REGEX.match(line) : nil)
+          )
+        ) && (! match_indexes.include?(match.begin(1)))
+      )
         print "\nMatched url: #{match[1]}: " if DEBUG
         match_indexes << match.begin(1)
         #   get the resource from that location, save it locally
-        match_url = match[1].gsub(/\s+/,"").gsub(/[\?\#&;=\+\$,<>"\{\}\|\\\^\[\]].*$/,"")
+        # match_url = match[1].gsub(/\s+/,"").gsub(/[\?\#&;=\+,<>"\{\}\|\\\^\[\]].*$/,"")
+        match_url = match[1]
         # puts("pre: #{match[1]}, post: #{match_url}") if DEBUG
         begin
           resource_url = URI.parse(CGI.unescapeHTML(match_url))

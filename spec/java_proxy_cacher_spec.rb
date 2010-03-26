@@ -38,6 +38,7 @@ describe 'Java Proxy Cacher' do
   describe 'empty otml' do
     it 'should create a url map xml file' do
       cache('empty.otml')
+      cache_size.should == 3
       exists?('url_map.xml')
     end
   
@@ -45,6 +46,7 @@ describe 'Java Proxy Cacher' do
       url = File.join(SPEC_ROOT,'data','empty.otml')
       expected_filename = ::Digest::SHA1.hexdigest(File.read(url))
       cache('empty.otml')
+      cache_size.should == 3
       exists?(expected_filename)
     end
   
@@ -52,7 +54,47 @@ describe 'Java Proxy Cacher' do
       url = File.join(SPEC_ROOT,'data','empty.otml')
       expected_filename = ::Digest::SHA1.hexdigest(File.read(url))
       cache('empty.otml')
+      cache_size.should == 3
       exists?("#{expected_filename}.hdrs")
+    end
+  end
+  
+  describe 'error handling' do
+    it 'should handle a bad url gracefully' do
+      url = File.join(SPEC_ROOT,'data','bad_url.otml')
+      expected_filename = ::Digest::SHA1.hexdigest(File.read(url))
+      
+      lambda {
+        cache('bad_url.otml')
+      }.should_not raise_error
+      
+      cache_size.should == 3
+      
+      exists?(expected_filename)
+      does_not_exist?('8f0ebcb45d7ba71a541d4781329f4a6900c7ee65') # http://portal.concord.org/images/icons/delete.png
+    end
+    
+    it 'should handle an empty url gracefully' do
+      url = File.join(SPEC_ROOT,'data','empty_url.otml')
+      expected_filename = ::Digest::SHA1.hexdigest(File.read(url))
+      
+      lambda {
+        cache('empty_url.otml')
+      }.should_not raise_error
+      
+      cache_size.should == 3
+      
+      exists?(expected_filename)
+    end
+    
+    it 'should handle an empty root url gracefully' do
+      pending do
+      lambda {
+        cache('')
+      }.should_not raise_error
+      
+      cache_size.should == 1
+    end
     end
   end
   

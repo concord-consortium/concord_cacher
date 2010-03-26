@@ -27,9 +27,9 @@ class ::Concord::DiyLocalCacher < ::Concord::Cacher
     uri_path = uri.path.split('/')
     uri_path = ["","index.html"] if uri_path.size == 0
     uri_path.unshift("") if uri_path.size == 1
-    file_dir = File.join("#{uri.scheme}","#{uri.host}","#{uri.port}",uri_path[0..-2])
-    file = uri_path[-1]
-    mkdir_p(File.join(@cache_dir,file_dir))
-    return File.join(file_dir,file)
+    file_ext = uri_path[-1].split('.')[-1]
+    file = ::Digest::SHA1.hexdigest(uri.to_s)
+    file += ".#{file_ext}" if file_ext
+    return file
   end
 end

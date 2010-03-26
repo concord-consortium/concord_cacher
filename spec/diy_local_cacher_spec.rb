@@ -20,18 +20,21 @@ OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 
 SPEC_ROOT = File.expand_path(File.dirname(__FILE__))
 
+$\ = "<br/>\n"
+
 describe 'DIY Local Cacher' do
   include CacheHelper
   
   before(:each) do
     @klass = Concord::DiyLocalCacher
     @cache = File.join(SPEC_ROOT, '..', 'tmp','diy_local')
+    rm_rf(@cache)
     mkdir_p(@cache)
     @cache += '/'
   end
   
   after(:each) do
-    rm_rf(@cache)
+    # rm_rf(@cache)
   end
   
   def mockup(file)
@@ -52,9 +55,10 @@ describe 'DIY Local Cacher' do
     uri_path = uri.path.split('/')
     uri_path = ["","index.html"] if uri_path.size == 0
     uri_path.unshift("") if uri_path.size == 1
-    file_dir = File.join("#{uri.scheme}","#{uri.host}","#{uri.port}",uri_path[0..-2])
-    file = uri_path[-1]
-    return File.join(file_dir,file)
+    file = ::Digest::SHA1.hexdigest(uri.to_s)
+    file_ext = uri_path[-1].split('.')[-1]
+    file += ".#{file_ext}" if file_ext
+    return file
   end
   
   describe 'empty otml' do
@@ -248,7 +252,22 @@ describe 'DIY Local Cacher' do
   end
   
   describe 'embedded mw files' do
-    it 'should correctly download resources referenced from within mw model files'
+    it 'should download absolute referenced cml files'
+    it 'should download relative referenced cml files'
+    
+    it 'should correctly download mmls referenced from within mw cml files' do
+      expected_files = []
+      expected_files << filename_for('http://otrunk.concord.org/examples/LOOPS/models/statesofmatter/statesOfMatterPage1$0.mml')
+      
+      cache('mw_model.otml', :activity => mockup('mw_model.otml'), :verbose => true)
+      
+      expected_files.each do |f|
+        exists?(f)
+      end
+    end
+    
+    it 'should correctly download images referenced from within mw cml files'
+    it 'should correctly download images referenced from within mml files'
   end
   
   describe 'never cache' do

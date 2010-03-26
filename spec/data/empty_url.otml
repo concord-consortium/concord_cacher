@@ -1,0 +1,14 @@
+<otrunk id="6b230c1d-8816-4ef3-9c7a-b84a0da0b35f">
+  <imports>
+    <import class="org.concord.otrunk.OTSystem" />
+  </imports>
+  <objects>  
+    <OTSystem local_id="system">
+      <root>
+        <OTText>
+          <img src='' />
+        </OTText>
+      </root>
+    </OTSystem>
+  </objects>
+</otrunk>
