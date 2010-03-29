@@ -1,0 +1,19 @@
+<otrunk id="67daad67-8762-4f5a-8c7c-50b7c3544c0b">
+  <imports>
+    <import class="org.concord.otrunk.OTSystem" />
+  </imports>
+  <objects>  
+    <OTSystem local_id="system">
+      <root>
+        <OTText>
+          <OTNLogoModel id="da6fbb40-5b45-11de-914d-6b8ca6afb695" name="NetLogo model" authoredDataURL="resources/nlogo/SpaceRescue.Practice1.nlogo" startButtonName="Start/stop" resetButtonName="Setup" >
+                                  	<variables>
+                                  		<string>rocket-x-vel</string>
+                                  	</variables>
+                                  </OTNLogoModel>
+          
+        </OTText>
+      </root>
+    </OTSystem>
+  </objects>
+</otrunk>

@@ -248,18 +248,59 @@ describe 'DIY Local Cacher' do
   end
   
   describe 'embedded nlogo files' do
+    it 'should download absolute referenced nlogo files' do
+      expected_files = []
+      expected_files << filename_for('http://otrunk.concord.org/examples/LOOPS/models/Spaceship.1D.docking.nlogo')
+      
+      cache('nlogo_absolute.otml', :activity => mockup('nlogo_absolute.otml'))
+      
+      expected_files.each do |f|
+        exists?(f)
+      end
+    end
+    
+    it 'should download relative referenced nlogo files' do
+      expected_files = []
+      expected_files << filename_for('resources/nlogo/SpaceRescue.Practice1.nlogo', File.join(SPEC_ROOT,'data','nlogo_relative.otml'))
+      
+      cache('nlogo_relative.otml', :activity => mockup('nlogo_relative.otml'))
+      
+      expected_files.each do |f|
+        exists?(f)
+      end
+    end
+    
     it 'should correctly download resources referenced from within netlogo model files'
   end
   
   describe 'embedded mw files' do
-    it 'should download absolute referenced cml files'
-    it 'should download relative referenced cml files'
+    it 'should download absolute referenced cml files' do
+      expected_files = []
+      expected_files << filename_for('http://otrunk.concord.org/examples/LOOPS/models/statesofmatter/statesOfMatterPage1.cml')
+      
+      cache('mw_model_absolute.otml', :activity => mockup('mw_model_absolute.otml'))
+      
+      expected_files.each do |f|
+        exists?(f)
+      end
+    end
+    
+    it 'should download relative referenced cml files' do
+      expected_files = []
+      expected_files << filename_for('resources/statesofmatter/statesOfMatterPage1.cml', File.join(SPEC_ROOT,'data','mw_model_relative.otml'))
+      
+      cache('mw_model_relative.otml', :activity => mockup('mw_model_relative.otml'))
+      
+      expected_files.each do |f|
+        exists?(f)
+      end
+    end
     
     it 'should correctly download mmls referenced from within mw cml files' do
       expected_files = []
       expected_files << filename_for('http://otrunk.concord.org/examples/LOOPS/models/statesofmatter/statesOfMatterPage1$0.mml')
       
-      cache('mw_model.otml', :activity => mockup('mw_model.otml'), :verbose => true)
+      cache('mw_model_absolute.otml', :activity => mockup('mw_model_absolute.otml'))
       
       expected_files.each do |f|
         exists?(f)
