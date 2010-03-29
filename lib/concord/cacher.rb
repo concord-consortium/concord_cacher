@@ -5,16 +5,31 @@ class ::Concord::Cacher
   require 'rexml/document'
   
   DEBUG = false
-
-  #   scan for anything that matches (http://[^'"]+)
+  
+  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  # FIXME: Right now, the code extracts the matching url from the first match group. Ruby 1.9 supports named groups -- once 1.9 is ubiquitous,
+  #   we should switch to using named groups to allow more complex regex matchers
+  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  
   URL_REGEX = /(http[s]?:\/\/[^'"]+)/i
   # the imageBytes can be referenced by a OTImage object
-  SRC_REGEX = /(?:src|href|imageBytes|authoredDataURL)[ ]?=[ ]?['"]([^'"]+)/i
-  NLOGO_REGEX = /import-drawing "([^"]+)"/i
-  MW_REGEX = /<resource>(.*?mml)<\/resource>/
+  # MW and Netlogo models use authoredDataURL attributes
+  SRC_REGEX = /(?:src|href|imageBytes|authoredDataURL)[ ]?=[ ]?['"](.+?)['"]/i
+
   ALWAYS_SKIP_REGEX = /^(mailto|jres)/i
   RECURSE_ONCE_REGEX = /html$/i  # (resourceFile =~ /otml$/ || resourceFile =~ /html/)
   RECURSE_FOREVER_REGEX = /(otml|cml|mml|nlogo)$/i
+  
+  FILE_SPECIFIC_REGEXES = {}
+  # These regexes will only match within a file that ends with .nlogo
+  NLOGO_REGEX = /.*\.nlogo/
+  FILE_SPECIFIC_REGEXES[NLOGO_REGEX] = []
+  FILE_SPECIFIC_REGEXES[NLOGO_REGEX] << Regexp.new(/import-drawing "([^"]+)"/i)
+  
+  # These regexes will only match within a file that ends with .cml or .mml
+  MW_REGEX = /.*\.(:?cml|mml)/
+  FILE_SPECIFIC_REGEXES[MW_REGEX] = []
+  FILE_SPECIFIC_REGEXES[MW_REGEX] << Regexp.new(/<resource>(.*?mml)<\/resource>/)
   
   attr_reader :otml_url, :cache_dir, :uuid, :errors
   
@@ -112,8 +127,7 @@ class ::Concord::Cacher
         ( match = (
             URL_REGEX.match(line) ||
             SRC_REGEX.match(line) ||
-            (/.*\.nlogo/.match(short_filename) ? NLOGO_REGEX.match(line) : nil) ||
-            (/.*\.(:?cml|mml)/.match(short_filename) ? MW_REGEX.match(line) : nil)
+            ((reg = FILE_SPECIFIC_REGEXES.detect{|r,v| r.match(short_filename)}) ? reg[1].map{|r2| r2.match(line) }.compact.first : nil)
           )
         ) && (! match_indexes.include?(match.begin(1)))
       )
