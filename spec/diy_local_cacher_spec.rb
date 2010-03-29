@@ -28,13 +28,12 @@ describe 'DIY Local Cacher' do
   before(:each) do
     @klass = Concord::DiyLocalCacher
     @cache = File.join(SPEC_ROOT, '..', 'tmp','diy_local')
-    rm_rf(@cache)
     mkdir_p(@cache)
     @cache += '/'
   end
   
   after(:each) do
-    # rm_rf(@cache)
+    rm_rf(@cache)
   end
   
   def mockup(file)
@@ -68,7 +67,6 @@ describe 'DIY Local Cacher' do
     end
   
     it 'should create a cached file of the original url' do
-      url = File.join(SPEC_ROOT,'data','empty.otml')
       cache('empty.otml', :activity => mockup('empty.otml'))
       exists?('hash.otml')
     end
@@ -78,6 +76,13 @@ describe 'DIY Local Cacher' do
       expected_filename = 'hash.otml'
       cache('empty.otml', :activity => mockup('empty.otml'))
       does_not_exist?("#{expected_filename}.hdrs")
+    end
+    
+    it 'should strip the codebase from the otrunk element' do
+      cache('codebase.otml', :activity => mockup('codebase.otml'))
+      
+      file_content = File.read(File.join(@cache,'hash.otml'))
+      file_content.should_not match(/<otrunk.*?codebase=.*?>/)
     end
   end
   
