@@ -4,7 +4,7 @@ class ::Concord::DiyLocalCacher < ::Concord::Cacher
   require 'fileutils'
   
   def initialize(opts = {})
-    raise InvalidArgumentError, "Must include :activity in the options hash." unless opts[:activity]
+    raise ::ArgumentError, "Must include :activity in the options hash." unless opts[:activity]
     @activity = opts[:activity]
     opts[:cache_headers] ||= false
     opts[:create_map] ||= false
@@ -13,16 +13,12 @@ class ::Concord::DiyLocalCacher < ::Concord::Cacher
   end
   
   def generate_main_filename
-    "#{generate_uuid}.otml"
-  end
-  
-  def generate_uuid
-    @activity.uuid
+    "#{@activity.uuid}.otml"
   end
   
   def generate_filename(opts = {})
-    raise InvalidArgumentError, "Must include :url key in opts" unless opts[:url]
-    raise InvalidArgumentError, ":url value must be an instance of URI" unless opts[:url].kind_of?(::URI)
+    raise ::ArgumentError, "Must include :url key in opts" unless opts[:url]
+    raise ::ArgumentError, ":url value must be an instance of URI" unless opts[:url].kind_of?(::URI)
     uri = opts[:url]
     uri_path = uri.path.split('/')
     uri_path = ["","index.html"] if uri_path.size == 0

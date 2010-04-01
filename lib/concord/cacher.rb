@@ -43,38 +43,52 @@ class ::Concord::Cacher
     opts = defaults.merge(opts)
     raise ArgumentError, "Must include :url, and :cache_dir in the options hash." unless opts[:url] && opts[:cache_dir]
     @rewrite_urls = opts[:rewrite_urls]
-    @cache_dir = opts[:cache_dir]
     @verbose = opts[:verbose]
     @cache_headers = opts[:cache_headers]
     @create_map = opts[:create_map]
-    url = opts[:url]
-    @filename = File.basename(url, ".otml")
-    @content = ""
-    open(url) do |r|
-      @content_headers = r.respond_to?("meta") ? r.meta : {}
-      @content_headers['_http_version'] = "HTTP/1.1 #{r.respond_to?("status") ? r.status.join(" ") : "200 OK"}"
-      @content = r.read
-    end
-    @uuid = generate_uuid
-    if (URI.parse(url).kind_of?(URI::HTTP))
-      @otml_url = url
-    else
-      # this probably references something on the local fs. we need to extract the document's codebase, if there is ony
-      if @content =~ /<otrunk[^>]+codebase[ ]?=[ ]?['"]([^'"]+)/
-        # @otml_url = "#{$1}/#{@filename}.otml"
-        @otml_url = "#{$1}"
-        @content.sub!(/codebase[ ]?=[ ]?['"][^'"]+['"]/,"")
-      else
-        @otml_url = url
-      end
+    
+    @main_resource = Concord::Resource.new
+    @main_resource.url = opts[:url]
+    @main_resource.remote_filename = File.basename(@main_resource.url, ".otml")
+    @main_resource.cache_dir = opts[:cache_dir]
+    
+    open(@main_resource.url) do |r|
+      @main_resource.headers = r.respond_to?("meta") ? r.meta : {}
+      @main_resource.headers['_http_version'] = "HTTP/1.1 #{r.respond_to?("status") ? r.status.join(" ") : "200 OK"}"
+      @main_resource.content = r.read
     end
     
-    @otml_url.sub!(/[^\/]+$/,"")
+    calculate_main_file_absolute_url
 
   	@errors = {}
   	
   	@url_to_hash_map = {}
 	end
+	
+	def calculate_main_file_absolute_url
+	  orig_uri = URI.parse(@main_resource.url)
+	  codebase = ''
+	  if ((orig_uri.kind_of?(URI::HTTP) || orig_uri.kind_of?(URI::HTTPS)) && orig_uri.absolute?)
+      @main_resource.uri = orig_uri
+    else
+      # this probably references something on the local fs. we need to extract the document's codebase, if there is ony
+      if @main_resource.content =~ /<otrunk[^>]+codebase[ ]?=[ ]?['"]([^'"]+)/
+        codebase = "#{$1}"
+        @main_resource.content.sub!(/codebase[ ]?=[ ]?['"][^'"]+['"]/,"")
+        codebase.sub!(/\/$/,'')
+        codebase = "#{codebase}/#{@main_resource.remote_filename}" unless codebase =~ /otml$/
+        @main_resource.uri = URI.parse(codebase)
+      else
+        @main_resource.uri = orig_uri
+      end
+    end
+    
+    if @main_resource.uri.relative?
+      # we need the main URI to be absolute so that we can use it to resolve references
+      file_root = URI.parse("file:///")
+      @main_resource.uri = file_root.merge(@main_resource.uri)
+    end
+  end
 	
 	def cache
 	  copy_otml_to_local_cache
@@ -90,26 +104,15 @@ class ::Concord::Cacher
 	  raise NotImplementedError, "You should be using this class through one of its sub-classes!"
   end
   
-  def generate_uuid
-    raise NotImplementedError, "You should be using this class through one of its sub-classes!"
-  end
-  
   def copy_otml_to_local_cache
     # save the file in the local server directories
-    filename = generate_main_filename
+    @main_resource.local_filename = generate_main_filename
 
-    # open the otml file from the specified url or grab the embedded content
-    uri = URI.parse(@otml_url)
-    if uri.relative?
-      # we need the main URI to be absolute so that we can use it to resolve references
-      file_root = URI.parse("file:///")
-      uri = file_root.merge(uri)
-    end
-    @content = parse_file(uri.path[SHORT_FILENAME_REGEX,1], @content, @cache_dir, uri, true)
+    @main_resource.content = parse_file(@main_resource.remote_filename, @main_resource.content, @main_resource.cache_dir, @main_resource.uri, true)
     
-    write_resource(@cache_dir + filename, @content)
-    write_property_map(@cache_dir + filename + ".hdrs", @content_headers) if @cache_headers
-    @url_to_hash_map[@otml_url + @filename + ".otml"] = filename
+    @main_resource.write
+    write_property_map(@main_resource.cache_dir + @main_resource.local_filename + ".hdrs", @main_resource.headers) if @cache_headers
+    @url_to_hash_map[@main_resource.url] = @main_resource.local_filename
 
     puts "\nThere were #{@errors.length} artifacts with errors.\n" if @verbose
     @errors.each do |k,v|
@@ -139,6 +142,7 @@ class ::Concord::Cacher
         match_indexes << match.begin(1)
         resource = Concord::Resource.new
         resource.url = match[1]
+        resource.cache_dir = cache_dir
         begin
           # strip whitespace from the end of the match url, but don't alter the url so that when
           # we replace the url later, we can, in essence, fix the malformed url 
@@ -182,7 +186,7 @@ class ::Concord::Cacher
         
         # skip downloading already existing files.
         # because we're working with sha1 hashes we can be reasonably certain the content is a complete match
-        if File.exists?(cache_dir + resource.local_filename)
+        if resource.exists?
           print 's' if @verbose
         else
           # if it's an otml/html file, we should parse it too (only one level down)
@@ -193,7 +197,7 @@ class ::Concord::Cacher
 							  recurse_further = true
 						  end
 							begin
-							  write_resource(cache_dir + resource.local_filename, "") # touch the file so that we avoid recursion
+							  resource.write # touch the file so that we avoid recursion
                 resource.content = parse_file(resource.remote_filename, resource.content, cache_dir, resource.uri, recurse_further)
 							rescue OpenURI::HTTPError => e
                 @errors[parent_url] ||= []
@@ -203,7 +207,7 @@ class ::Concord::Cacher
 							end
           end
           begin
-            write_resource(cache_dir + resource.local_filename, resource.content)
+            resource.write
             write_property_map(cache_dir + resource.local_filename + ".hdrs", resource.headers) if @cache_headers
             print "." if @verbose
           rescue Exception => e
@@ -220,16 +224,9 @@ class ::Concord::Cacher
     return processed_lines.join("\n")
   end
   
-  def write_resource(filename, content)
-    f = File.new(filename, "w")
-    f.write(content)
-    f.flush
-    f.close
-  end
-  
   def write_url_to_hash_map
-    load_existing_map if (File.exists?(@cache_dir + "url_map.xml"))
-    write_property_map(@cache_dir + "url_map.xml", @url_to_hash_map)
+    load_existing_map if (File.exists?(@main_resource.cache_dir + "url_map.xml"))
+    write_property_map(@main_resource.cache_dir + "url_map.xml", @url_to_hash_map)
   end
     
   def write_property_map(filename, hash_map)
@@ -246,7 +243,7 @@ class ::Concord::Cacher
   end
   
   def load_existing_map
-    map_content = ::REXML::Document.new(File.new(@cache_dir + "url_map.xml")).root
+    map_content = ::REXML::Document.new(File.new(@main_resource.cache_dir + "url_map.xml")).root
     map_content.elements.each("entry") do |entry|
       k = entry.attributes["key"]
       if ! (@url_to_hash_map.include? k)
