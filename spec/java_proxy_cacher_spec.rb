@@ -74,6 +74,20 @@ describe 'Java Proxy Cacher' do
       does_not_exist?('8f0ebcb45d7ba71a541d4781329f4a6900c7ee65') # http://portal.concord.org/images/icons/delete.png
     end
     
+    it 'should handle a url with trailing spaces gracefully' do
+      url = File.join(SPEC_ROOT,'data','url_with_space.otml')
+      expected_filename = ::Digest::SHA1.hexdigest(File.read(url))
+      
+      lambda {
+        cache('url_with_space.otml')
+      }.should_not raise_error
+      
+      cache_size.should == 5
+      
+      exists?(expected_filename)
+      exists?('d1cea238486aeeba9215d56bf71efc243754fe48') # http://portal.concord.org/images/icons/chart_line.png
+    end
+    
     it 'should handle an empty url gracefully' do
       url = File.join(SPEC_ROOT,'data','empty_url.otml')
       expected_filename = ::Digest::SHA1.hexdigest(File.read(url))

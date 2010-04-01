@@ -141,7 +141,9 @@ class ::Concord::Cacher
         match_url = match[1]
         # puts("pre: #{match[1]}, post: #{match_url}") if DEBUG
         begin
-          resource_url = URI.parse(CGI.unescapeHTML(match_url))
+          # strip whitespace from the end of the match url, but don't alter the url so that when
+          # we replace the url later, we can, in essence, fix the malformed url 
+          resource_url = URI.parse(CGI.unescapeHTML(match_url.sub(/\s+$/,'')))
         rescue
           @errors[parent_url] ||= []
         @errors[parent_url] << "Bad URL: '#{CGI.unescapeHTML(match_url)}', skipping."
