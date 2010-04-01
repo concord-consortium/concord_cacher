@@ -191,7 +191,12 @@ describe 'Java Proxy Cacher' do
   end
   
   describe 'never cache' do
-    it 'should always skip mailto and jres references'
+    it 'should always skip some references' do
+      url = File.join(SPEC_ROOT,'data','always_skip.otml')
+      expected_filename = ::Digest::SHA1.hexdigest(File.read(url))
+      cache('always_skip.otml')
+      cache_size.should == 3
+    end
   end
   
   describe 'recursion limits' do

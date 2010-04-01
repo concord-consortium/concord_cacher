@@ -317,7 +317,12 @@ describe 'DIY Local Cacher' do
   end
   
   describe 'never cache' do
-    it 'should always skip mailto and jres references'
+    it 'should always skip some references' do
+      url = File.join(SPEC_ROOT,'data','always_skip.otml')
+      expected_filename = 'hash.otml'
+      cache('always_skip.otml', :activity => mockup('always_skip.otml'))
+      cache_size.should == 1
+    end
   end
   
   describe 'recursion limits' do

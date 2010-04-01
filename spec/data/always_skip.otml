@@ -1,0 +1,16 @@
+<otrunk id="6b230c1d-8816-4ef3-9c7a-b84a0da0b35f">
+  <imports>
+    <import class="org.concord.otrunk.OTSystem" />
+  </imports>
+  <objects>  
+    <OTSystem local_id="system">
+      <root>
+        <OTText>
+          <!-- skip w3.org urls -->
+          http://www.w3.org/1999/xhtml
+          http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd
+        </OTText>
+      </root>
+    </OTSystem>
+  </objects>
+</otrunk>

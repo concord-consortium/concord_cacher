@@ -16,7 +16,10 @@ class ::Concord::Cacher
   # MW and Netlogo models use authoredDataURL attributes
   SRC_REGEX = /(?:src|href|imageBytes|authoredDataURL)[ ]?=[ ]?['"](.+?)['"]/i
 
-  ALWAYS_SKIP_REGEX = /^(mailto|jres)/i
+  ALWAYS_SKIP_REGEXES = []
+  ALWAYS_SKIP_REGEXES << Regexp.new(/^(mailto|jres)/i)
+  ALWAYS_SKIP_REGEXES << Regexp.new(/http[s]?:\/\/.*?w3\.org\//i)
+
   RECURSE_ONCE_REGEX = /html$/i  # (resourceFile =~ /otml$/ || resourceFile =~ /html/)
   RECURSE_FOREVER_REGEX = /(otml|cml|mml|nlogo)$/i
   
@@ -153,7 +156,7 @@ class ::Concord::Cacher
         resourceFile = resourceFile.gsub(/http[s]?:\/\//,"")
         resourceFile = resourceFile.gsub(/\/$/,"")
 
-        if (resourceFile.length < 1) || ALWAYS_SKIP_REGEX.match(resourceFile)
+        if (resourceFile.length < 1) || ALWAYS_SKIP_REGEXES.detect{|r| r.match(match_url) }
           print "S" if @verbose
           next
         end
