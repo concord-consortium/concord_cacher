@@ -134,8 +134,8 @@ describe 'Java Proxy Cacher' do
   describe 'element references syntax' do
     it 'should cache 6 referenced files' do
       expected_files = []
-      expected_files << '9f945e576290efa874842b4ee07ab437d9d94a67' # element_reference.otml
-      expected_files << 'd9a2565586307e2924c953dfe788154749e93799' # http://loops.diy.concord.org/
+      expected_files << '836ba09d9d7288cf735f555e7a9b9b314ad2f6ef' # element_reference.otml
+      expected_files << '20e89b62dda582d80e1832050f4998d64c801c03' # http://www.concord.org/~aunger/
       expected_files << '4e9576a56db3d142113b8905d7aa93e31c9f441b' # http://portal.concord.org/images/icons/chart_bar.png
       expected_files << '41f082b7e69a399679a47acfdcd7e7a204e49745' # http://portal.concord.org/images/icons/chart_pie.png
       expected_files << 'cbe7ac86926fd3b8aa8659842a1d8c299d8966a7' # resources/text.txt

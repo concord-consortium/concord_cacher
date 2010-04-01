@@ -7,7 +7,7 @@
       <root>
         <OTText>
           <!-- Absolute references -->
-          <a href="http://loops.diy.concord.org/">Visit the Concord Website</a>
+          <a href="http://www.concord.org/~aunger/">Visit the Concord Website</a>
           <img src="http://portal.concord.org/images/icons/chart_bar.png" />
           <OTBlob imageBytes="http://portal.concord.org/images/icons/chart_pie.png" />
           

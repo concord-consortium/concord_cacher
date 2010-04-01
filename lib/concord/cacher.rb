@@ -6,6 +6,8 @@ class ::Concord::Cacher
   
   DEBUG = false
   
+  SHORT_FILENAME_REGEX = /([^\/]+)$/
+  
   # !!!!!!!!!!!!!!!!!!!!!!!!!!!!
   # FIXME: Right now, the code extracts the matching url from the first match group. Ruby 1.9 supports named groups -- once 1.9 is ubiquitous,
   #   we should switch to using named groups to allow more complex regex matchers
@@ -20,7 +22,7 @@ class ::Concord::Cacher
   ALWAYS_SKIP_REGEXES << Regexp.new(/^(mailto|jres)/i)
   ALWAYS_SKIP_REGEXES << Regexp.new(/http[s]?:\/\/.*?w3\.org\//i)
 
-  RECURSE_ONCE_REGEX = /html$/i  # (resourceFile =~ /otml$/ || resourceFile =~ /html/)
+  RECURSE_ONCE_REGEX = /html$/i
   RECURSE_FOREVER_REGEX = /(otml|cml|mml|nlogo)$/i
   
   FILE_SPECIFIC_REGEXES = {}
@@ -103,7 +105,7 @@ class ::Concord::Cacher
       file_root = URI.parse("file:///")
       uri = file_root.merge(uri)
     end
-    @content = parse_file("#{@cache_dir}#{@filename}", @content, @cache_dir, uri, true)
+    @content = parse_file(uri.path[SHORT_FILENAME_REGEX,1], @content, @cache_dir, uri, true)
     
     write_resource(@cache_dir + filename, @content)
     write_property_map(@cache_dir + filename + ".hdrs", @content_headers) if @cache_headers
@@ -118,8 +120,7 @@ class ::Concord::Cacher
     end
   end
   
-  def parse_file(orig_filename, content, cache_dir, parent_url, recurse)
-    short_filename = /\/([^\/]+)$/.match(orig_filename)[1]
+  def parse_file(short_filename, content, cache_dir, parent_url, recurse)
     print "\n#{short_filename}: " if @verbose
     processed_lines = []
     lines = content.split("\n")
@@ -136,82 +137,78 @@ class ::Concord::Cacher
       )
         print "\nMatched url: #{match[1]}: " if DEBUG
         match_indexes << match.begin(1)
-        #   get the resource from that location, save it locally
-        # match_url = match[1].gsub(/\s+/,"").gsub(/[\?\#&;=\+,<>"\{\}\|\\\^\[\]].*$/,"")
-        match_url = match[1]
-        # puts("pre: #{match[1]}, post: #{match_url}") if DEBUG
+        resource = Concord::Resource.new
+        resource.url = match[1]
         begin
           # strip whitespace from the end of the match url, but don't alter the url so that when
           # we replace the url later, we can, in essence, fix the malformed url 
-          resource_url = URI.parse(CGI.unescapeHTML(match_url.sub(/\s+$/,'')))
+          resource.uri = URI.parse(CGI.unescapeHTML(resource.url.sub(/\s+$/,'')))
         rescue
           @errors[parent_url] ||= []
-        @errors[parent_url] << "Bad URL: '#{CGI.unescapeHTML(match_url)}', skipping."
+          @errors[parent_url] << "Bad URL: '#{CGI.unescapeHTML(resource.url)}', skipping."
           print 'x' if @verbose
           next
         end
-        if (resource_url.relative?)
+        if (resource.uri.relative?)
           # relative URL's need to have their parent document's codebase appended before trying to download
-          resource_url = parent_url.merge(resource_url.to_s)
+          resource.uri = parent_url.merge(resource.url)
         end
-        resourceFile = match_url
-        resourceFile = resourceFile.gsub(/http[s]?:\/\//,"")
-        resourceFile = resourceFile.gsub(/\/$/,"")
+        resource.remote_filename = resource.uri.path[SHORT_FILENAME_REGEX,1]
+        resource.remote_filename = 'index.html' unless resource.remote_filename
 
-        if (resourceFile.length < 1) || ALWAYS_SKIP_REGEXES.detect{|r| r.match(match_url) }
+        if (resource.url.length < 1) || ALWAYS_SKIP_REGEXES.detect{|r| r.match(resource.url) }
           print "S" if @verbose
           next
         end
         
+        resource.headers = {}
       	begin
-          resource_content = ""
-          resource_headers = {}
-          open(resource_url.scheme == 'file' ? resource_url.path : resource_url.to_s) do |r|
-            resource_headers = r.respond_to?("meta") ? r.meta : {}
-            resource_headers['_http_version'] = "HTTP/1.1 #{r.respond_to?("status") ? r.status.join(" ") : "200 OK"}"
-            resource_content = r.read
+          open(resource.uri.scheme == 'file' ? resource.uri.path : resource.uri.to_s) do |r|
+            resource.headers = r.respond_to?("meta") ? r.meta : {}
+            resource.headers['_http_version'] = "HTTP/1.1 #{r.respond_to?("status") ? r.status.join(" ") : "200 OK"}"
+            resource.content = r.read
           end
 				rescue OpenURI::HTTPError, Timeout::Error, Errno::ENOENT => e
           @errors[parent_url] ||= []
-          @errors[parent_url] << "Problem getting file: #{resource_url.to_s},   Error: #{e}"
+          @errors[parent_url] << "Problem getting file: #{resource.uri.to_s},   Error: #{e}"
           print 'X' if @verbose
 					next
 				end
 
-        localFile = generate_filename(:content => resource_content, :url => resource_url)
-        @url_to_hash_map[resource_url.to_s] = localFile
-        line.sub!(match_url.to_s,localFile.to_s) if @rewrite_urls
+        resource.local_filename = generate_filename(:content => resource.content, :url => resource.uri)
+        @url_to_hash_map[resource.url] = resource.local_filename
+        line.sub!(resource.url,resource.local_filename.to_s) if @rewrite_urls
         
         
         # skip downloading already existing files.
         # because we're working with sha1 hashes we can be reasonably certain the content is a complete match
-        if File.exists?(cache_dir + localFile)
+        if File.exists?(cache_dir + resource.local_filename)
           print 's' if @verbose
         else
           # if it's an otml/html file, we should parse it too (only one level down)
-          if (recurse && (RECURSE_ONCE_REGEX.match(resourceFile) || RECURSE_FOREVER_REGEX.match(resourceFile)))
-							puts "recursively parsing '#{resource_url.to_s}'" if DEBUG
+          if (recurse && (RECURSE_ONCE_REGEX.match(resource.remote_filename) || RECURSE_FOREVER_REGEX.match(resource.remote_filename)))
+							puts "recursively parsing '#{resource.uri.to_s}'" if DEBUG
 							recurse_further = false
-							if RECURSE_FOREVER_REGEX.match(resourceFile)
+							if RECURSE_FOREVER_REGEX.match(resource.remote_filename)
 							  recurse_further = true
 						  end
 							begin
-							  write_resource(cache_dir + localFile, "") # touch the file so that we avoid recursion
-                resource_content = parse_file(cache_dir + resourceFile, resource_content, cache_dir, resource_url, recurse_further)
+							  write_resource(cache_dir + resource.local_filename, "") # touch the file so that we avoid recursion
+                resource.content = parse_file(resource.remote_filename, resource.content, cache_dir, resource.uri, recurse_further)
 							rescue OpenURI::HTTPError => e
                 @errors[parent_url] ||= []
-                @errors[parent_url] << "Problem getting or writing file: #{resource_url.to_s},   Error: #{e}"
+                @errors[parent_url] << "Problem getting or writing file: #{resource.uri.to_s},   Error: #{e}"
                 print 'X' if @verbose
 								next
 							end
           end
           begin
-            write_resource(cache_dir + localFile, resource_content)
-            write_property_map(cache_dir + localFile + ".hdrs", resource_headers) if @cache_headers
+            write_resource(cache_dir + resource.local_filename, resource.content)
+            write_property_map(cache_dir + resource.local_filename + ".hdrs", resource.headers) if @cache_headers
             print "." if @verbose
           rescue Exception => e
             @errors[parent_url] ||= []
-            @errors[parent_url] << "Problem getting or writing file: #{resource_url.to_s},   Error: #{e}"
+            @errors[parent_url] << "Problem getting or writing file: #{resource.uri.to_s},   Error: #{e}"
             print 'X' if @verbose
           end
         end

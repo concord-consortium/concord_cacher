@@ -118,7 +118,7 @@ describe 'DIY Local Cacher' do
     it 'should cache 6 referenced files' do
       expected_files = []
       expected_files << 'hash.otml' # element_reference.otml
-      expected_files << filename_for('http://loops.diy.concord.org/')
+      expected_files << filename_for('http://www.concord.org/~aunger/')
       expected_files << filename_for('http://portal.concord.org/images/icons/chart_bar.png')
       expected_files << filename_for('http://portal.concord.org/images/icons/chart_pie.png')
       expected_files << filename_for('resources/text.txt', File.join(SPEC_ROOT,'data','element_reference.otml'))
@@ -136,7 +136,7 @@ describe 'DIY Local Cacher' do
     it 'should rewrite the urls in the main otml file' do
       expected_urls = []
       unexpected_urls = []
-      unexpected_urls << 'http://loops.diy.concord.org/'
+      unexpected_urls << 'http://www.concord.org/~aunger/'
       unexpected_urls << 'http://portal.concord.org/images/icons/chart_bar.png'
       unexpected_urls << 'http://portal.concord.org/images/icons/chart_pie.png'
       unexpected_urls << File.join('resources','text.txt')
