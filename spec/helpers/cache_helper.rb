@@ -20,3 +20,11 @@ module CacheHelper
     Dir.glob(@cache + "/**/*").select{|f| File.file?(f) }.size
   end
 end
+
+require 'openssl'
+module OpenSSL
+  module SSL
+	  remove_const :VERIFY_PEER
+	end
+end
+OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
