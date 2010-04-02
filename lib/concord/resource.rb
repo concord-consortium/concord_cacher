@@ -116,6 +116,15 @@ class ::Concord::Resource
     return @remote_filename
   end
   
+  def recursable?
+    return (RECURSE_ONCE_REGEX.match(self.remote_filename) || RECURSE_FOREVER_REGEX.match(self.remote_filename))
+  end
+  
+  def should_recurse?
+    return true if self.should_recurse || RECURSE_FOREVER_REGEX.match(self.remote_filename)
+    return false
+  end
+  
   private
   
   def _line_matches(line)
@@ -182,12 +191,8 @@ class ::Concord::Resource
         print 's' if self.class.verbose
       else
         # if it's an otml/html file, we should parse it too (only one level down)
-        if (self.should_recurse && (RECURSE_ONCE_REGEX.match(resource.remote_filename) || RECURSE_FOREVER_REGEX.match(resource.remote_filename)))
+        if (self.should_recurse? && resource.recursable?)
 						puts "recursively parsing '#{resource.uri.to_s}'" if self.class.debug
-						resource.should_recurse = false
-						if RECURSE_FOREVER_REGEX.match(resource.remote_filename)
-						  resource.should_recurse = true
-					  end
 						begin
 						  resource.write # touch the file so that we know not to try to re-process the file we're currently processing
               resource.content = resource.process
