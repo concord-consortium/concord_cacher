@@ -4,7 +4,12 @@ class ::Concord::JavaProxyCacher < ::Concord::Cacher
   
   include ::Concord::Helper
   
-  @url_to_hash_map = {}
+  def initialize(opts = {})
+    ::Concord::Resource.create_map = true
+    ::Concord::Resource.cache_headers = true
+    ::Concord::Resource.rewrite_urls = false
+    super
+  end
   
   def generate_main_filename
     generate_filename(:content => @main_resource.content)
