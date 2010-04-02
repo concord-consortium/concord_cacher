@@ -4,7 +4,8 @@ class ::Concord::Resource
   include ::Concord::Helper
   
   attr_accessor :uri,:url
-  attr_accessor :remote_filename,:local_filename
+  attr_accessor :local_filename
+  @remote_filename = nil
   attr_accessor :content,:headers
   attr_accessor :errors
   attr_accessor :parent
@@ -104,6 +105,17 @@ class ::Concord::Resource
     return processed_lines.join("\n")
   end
   
+  def always_skip?
+    return (self.url.length < 1) || ALWAYS_SKIP_REGEXES.detect{|r| r.match(self.url) }
+  end
+  
+  def remote_filename
+    return @remote_filename if @remote_filename
+    @remote_filename = self.uri.path[SHORT_FILENAME_REGEX,1]
+    @remote_filename = 'index.html' unless @remote_filename
+    return @remote_filename
+  end
+  
   private
   
   def _line_matches(line)
@@ -145,10 +157,8 @@ class ::Concord::Resource
         # relative URL's need to have their parent document's codebase appended before trying to download
         resource.uri = self.uri.merge(resource.url.sub(/\s+$/,''))
       end
-      resource.remote_filename = resource.uri.path[SHORT_FILENAME_REGEX,1]
-      resource.remote_filename = 'index.html' unless resource.remote_filename
 
-      if (resource.url.length < 1) || ALWAYS_SKIP_REGEXES.detect{|r| r.match(resource.url) }
+      if resource.always_skip?
         print "S" if self.class.verbose
         next
       end

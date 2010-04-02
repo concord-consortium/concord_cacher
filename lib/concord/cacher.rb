@@ -18,7 +18,6 @@ class ::Concord::Cacher
     
     @main_resource = Concord::Resource.new
     @main_resource.url = opts[:url]
-    @main_resource.remote_filename = File.basename(@main_resource.url, ".otml")
     @main_resource.cache_dir = opts[:cache_dir]
     @main_resource.uri = URI.parse(@main_resource.url)
     @main_resource.load
