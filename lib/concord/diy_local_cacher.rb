@@ -6,9 +6,9 @@ class ::Concord::DiyLocalCacher < ::Concord::Cacher
   def initialize(opts = {})
     raise ::ArgumentError, "Must include :activity in the options hash." unless opts[:activity]
     @activity = opts[:activity]
-    opts[:cache_headers] ||= false
-    opts[:create_map] ||= false
-    opts[:rewrite_urls] ||= true
+    ::Concord::Resource.cache_headers = false
+    ::Concord::Resource.rewrite_urls = true
+    ::Concord::Resource.create_map = false
     super
   end
   
