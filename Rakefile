@@ -6,7 +6,7 @@ require 'spec/rake/spectask'
 require './lib/concord_cacher.rb'
 
 require 'echoe'
-Echoe.new('concord_cacher', '0.1.0') do |p|
+Echoe.new('concord_cacher', '0.1.1') do |p|
   p.description    = "concord_cacher provides support for locally caching a resource and all referenced resources in multiple different ways. It is intended for using with other Concord Consortium projects and not necessarily for outside projects."
   p.summary        = "Support for locally caching a resource and all referenced resources in multiple different ways"
   p.url            = "http://github.com/psndcsrv/concord_cacher"
