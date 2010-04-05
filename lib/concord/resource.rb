@@ -159,65 +159,68 @@ class ::Concord::Resource
       match_indexes << match.begin(1)
       resource = Concord::Resource.new
       resource.url = match[1]
-      resource.cache_dir = self.cache_dir
-      begin
-        # strip whitespace from the end of the match url, but don't alter the url so that when
-        # we replace the url later, we can, in essence, fix the malformed url 
-        resource.uri = URI.parse(CGI.unescapeHTML(resource.url.sub(/\s+$/,'')))
-      rescue
-        self.class.error(self.url, "Bad URL: '#{CGI.unescapeHTML(resource.url)}', skipping.")
-        print 'x' if self.class.verbose
-        next
-      end
-      if (resource.uri.relative?)
-        # relative URL's need to have their parent document's codebase appended before trying to download
-        resource.uri = self.uri.merge(resource.url.sub(/\s+$/,''))
-      end
-
-      if resource.always_skip?
-        print "S" if self.class.verbose
-        next
-      end
-      
-      resource.headers = {}
-    	begin
-        resource.load
-			rescue OpenURI::HTTPError, Timeout::Error, Errno::ENOENT => e
-        self.class.error(self.url, "Problem getting file: #{resource.uri.to_s},   Error: #{e}")
-        print 'X' if self.class.verbose
-				next
-			end
-
-      line.sub!(resource.url,resource.local_filename.to_s) if self.class.rewrite_urls
-      
-      
-      # skip downloading already existing files.
-      # because we're working with sha1 hashes we can be reasonably certain the content is a complete match
-      if resource.exists?
-        print 's' if self.class.verbose
-      else
-        # if it's an otml/html file, we should parse it too (only one level down)
-        if (self.should_recurse? && resource.recursable?)
-						puts "recursively parsing '#{resource.uri.to_s}'" if self.class.debug
-						begin
-						  resource.write # touch the file so that we know not to try to re-process the file we're currently processing
-              resource.content = resource.process
-						rescue OpenURI::HTTPError => e
-              self.class.error(self.url,"Problem getting or writing file: #{resource.uri.to_s},   Error: #{e}")
-              print 'X' if self.class.verbose
-							next
-						end
-        end
-        begin
-          resource.write
-          print "." if self.class.verbose
-        rescue Exception => e
-          self.class.error(self.url,"Problem getting or writing file: #{resource.uri.to_s},   Error: #{e}")
-          print 'X' if self.class.verbose
-        end
+      if _handle_resource(resource) && self.class.rewrite_urls
+        line.sub!(resource.url,resource.local_filename.to_s)
       end
     end
     return line
   end
   
+  def _handle_resource(resource)
+    resource.cache_dir = self.cache_dir
+    begin
+      # strip whitespace from the end of the match url, but don't alter the url so that when
+      # we replace the url later, we can, in essence, fix the malformed url 
+      resource.uri = URI.parse(CGI.unescapeHTML(resource.url.sub(/\s+$/,'')))
+    rescue
+      self.class.error(self.url, "Bad URL: '#{CGI.unescapeHTML(resource.url)}', skipping.")
+      print 'x' if self.class.verbose
+      return false
+    end
+    if (resource.uri.relative?)
+      # relative URL's need to have their parent document's codebase appended before trying to download
+      resource.uri = self.uri.merge(resource.url.sub(/\s+$/,''))
+    end
+
+    if resource.always_skip?
+      print "S" if self.class.verbose
+      return false
+    end
+    
+    resource.headers = {}
+  	begin
+      resource.load
+		rescue OpenURI::HTTPError, Timeout::Error, Errno::ENOENT => e
+      self.class.error(self.url, "Problem getting file: #{resource.uri.to_s},   Error: #{e}")
+      print 'X' if self.class.verbose
+			return false
+		end
+
+    # skip downloading already existing files.
+    # because we're working with sha1 hashes we can be reasonably certain the content is a complete match
+    if resource.exists?
+      print 's' if self.class.verbose
+    else
+      # if it's an otml/html file, we should parse it too (only one level down)
+      if (self.should_recurse? && resource.recursable?)
+					puts "recursively parsing '#{resource.uri.to_s}'" if self.class.debug
+					begin
+					  resource.write # touch the file so that we know not to try to re-process the file we're currently processing
+            resource.content = resource.process
+					rescue OpenURI::HTTPError => e
+            self.class.error(self.url,"Problem getting or writing file: #{resource.uri.to_s},   Error: #{e}")
+            print 'X' if self.class.verbose
+						next
+					end
+      end
+      begin
+        resource.write
+        print "." if self.class.verbose
+      rescue Exception => e
+        self.class.error(self.url,"Problem getting or writing file: #{resource.uri.to_s},   Error: #{e}")
+        print 'X' if self.class.verbose
+      end
+    end
+    return true
+  end
 end
