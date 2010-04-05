@@ -10,14 +10,13 @@ require 'fileutils'
 
 include FileUtils
 
-SPEC_ROOT = File.expand_path(File.dirname(__FILE__))
-
 describe 'DIY Local Cacher' do
   include CacheHelper
   
   before(:each) do
     @klass = Concord::DiyLocalCacher
-    @cache = File.join(SPEC_ROOT, '..', 'tmp','diy_local')
+    @spec_root = File.expand_path(File.dirname(__FILE__))
+    @cache = File.join(@spec_root, '..', 'tmp','diy_local')
     mkdir_p(@cache)
     @cache += '/'
   end
@@ -62,7 +61,7 @@ describe 'DIY Local Cacher' do
     end
   
     it 'should not create a cached header of the original url' do
-      url = File.join(SPEC_ROOT,'data','empty.otml')
+      url = File.join(@spec_root,'data','empty.otml')
       expected_filename = 'hash.otml'
       cache('empty.otml', :activity => mockup('empty.otml'))
       does_not_exist?("#{expected_filename}.hdrs")
@@ -111,9 +110,9 @@ describe 'DIY Local Cacher' do
       expected_files << filename_for('http://www.concord.org/~aunger/')
       expected_files << filename_for('http://portal.concord.org/images/icons/chart_bar.png')
       expected_files << filename_for('http://portal.concord.org/images/icons/chart_pie.png')
-      expected_files << filename_for('resources/text.txt', File.join(SPEC_ROOT,'data','element_reference.otml'))
-      expected_files << filename_for('resources/delete.png', File.join(SPEC_ROOT,'data','element_reference.otml'))
-      expected_files << filename_for('resources/chart_line.png', File.join(SPEC_ROOT,'data','element_reference.otml'))
+      expected_files << filename_for('resources/text.txt', File.join(@spec_root,'data','element_reference.otml'))
+      expected_files << filename_for('resources/delete.png', File.join(@spec_root,'data','element_reference.otml'))
+      expected_files << filename_for('resources/chart_line.png', File.join(@spec_root,'data','element_reference.otml'))
       
       cache('element_reference.otml', :activity => mockup('element_reference.otml'))
       
@@ -137,7 +136,7 @@ describe 'DIY Local Cacher' do
         if url =~ /^http/
           expected_urls << filename_for(url)
         else
-          expected_urls << filename_for(url, File.join(SPEC_ROOT,'data','element_reference.otml'))
+          expected_urls << filename_for(url, File.join(@spec_root,'data','element_reference.otml'))
         end
       end
       
@@ -159,10 +158,10 @@ describe 'DIY Local Cacher' do
     it 'should cache 4 referenced files in otml files' do
       expected_files = []
       expected_files << 'hash.otml' # recursion.otml
-      expected_files << filename_for('resources/recurse1.otml', File.join(SPEC_ROOT,'data','recursion.otml'))
-      expected_files << filename_for('resources/delete.png', File.join(SPEC_ROOT,'data','recursion.otml'))
-      expected_files << filename_for('resources/recurse2.otml', File.join(SPEC_ROOT,'data','recursion.otml'))
-      expected_files << filename_for('resources/chart_line.png', File.join(SPEC_ROOT,'data','recursion.otml'))
+      expected_files << filename_for('resources/recurse1.otml', File.join(@spec_root,'data','recursion.otml'))
+      expected_files << filename_for('resources/delete.png', File.join(@spec_root,'data','recursion.otml'))
+      expected_files << filename_for('resources/recurse2.otml', File.join(@spec_root,'data','recursion.otml'))
+      expected_files << filename_for('resources/chart_line.png', File.join(@spec_root,'data','recursion.otml'))
       
       cache('recursion.otml', :activity => mockup('recursion.otml'))
       
@@ -173,7 +172,7 @@ describe 'DIY Local Cacher' do
     end
     
     it 'should rewrite urls in first level recursion otml' do
-      recurse_otml = filename_for('resources/recurse1.otml', File.join(SPEC_ROOT,'data','recursion.otml'))
+      recurse_otml = filename_for('resources/recurse1.otml', File.join(@spec_root,'data','recursion.otml'))
       
       expected_urls = []
       unexpected_urls = []
@@ -182,7 +181,7 @@ describe 'DIY Local Cacher' do
       unexpected_urls << File.join('resources','delete.png')
       
       unexpected_urls.each do |url|
-        expected_urls << filename_for(url, File.join(SPEC_ROOT,'data','recursion.otml'))
+        expected_urls << filename_for(url, File.join(@spec_root,'data','recursion.otml'))
       end
       
       cache('recursion.otml', :activity => mockup('recursion.otml'))
@@ -199,7 +198,7 @@ describe 'DIY Local Cacher' do
     end
     
     it 'should rewrite urls in second level recursion otml' do
-      recurse_otml = recurse_otml = filename_for('resources/recurse2.otml', File.join(SPEC_ROOT,'data','recursion.otml'))
+      recurse_otml = recurse_otml = filename_for('resources/recurse2.otml', File.join(@spec_root,'data','recursion.otml'))
       
       expected_urls = []
       unexpected_urls = []
@@ -207,7 +206,7 @@ describe 'DIY Local Cacher' do
       unexpected_urls << File.join('resources','chart_line.png')
       
       unexpected_urls.each do |url|
-        expected_urls << filename_for(url, File.join(SPEC_ROOT,'data','recursion.otml'))
+        expected_urls << filename_for(url, File.join(@spec_root,'data','recursion.otml'))
       end
       
       cache('recursion.otml', :activity => mockup('recursion.otml'))
@@ -226,10 +225,10 @@ describe 'DIY Local Cacher' do
     it 'should not get stuck when handling circular loops' do
       expected_files = []
       expected_files << 'hash.otml' # recursion.otml
-      expected_files << filename_for('resources/loop1.otml', File.join(SPEC_ROOT,'data','recursive_loop.otml'))
-      expected_files << filename_for('resources/delete.png', File.join(SPEC_ROOT,'data','recursive_loop.otml'))
-      expected_files << filename_for('resources/loop2.otml', File.join(SPEC_ROOT,'data','recursive_loop.otml'))
-      expected_files << filename_for('resources/chart_line.png', File.join(SPEC_ROOT,'data','recursive_loop.otml'))
+      expected_files << filename_for('resources/loop1.otml', File.join(@spec_root,'data','recursive_loop.otml'))
+      expected_files << filename_for('resources/delete.png', File.join(@spec_root,'data','recursive_loop.otml'))
+      expected_files << filename_for('resources/loop2.otml', File.join(@spec_root,'data','recursive_loop.otml'))
+      expected_files << filename_for('resources/chart_line.png', File.join(@spec_root,'data','recursive_loop.otml'))
       
       lambda {
         cache('recursive_loop.otml', :activity => mockup('recursive_loop.otml'))
@@ -256,7 +255,7 @@ describe 'DIY Local Cacher' do
     
     it 'should download relative referenced nlogo files' do
       expected_files = []
-      expected_files << filename_for('resources/nlogo/SpaceRescue.Practice1.nlogo', File.join(SPEC_ROOT,'data','nlogo_relative.otml'))
+      expected_files << filename_for('resources/nlogo/SpaceRescue.Practice1.nlogo', File.join(@spec_root,'data','nlogo_relative.otml'))
       
       cache('nlogo_relative.otml', :activity => mockup('nlogo_relative.otml'))
       
@@ -282,7 +281,7 @@ describe 'DIY Local Cacher' do
     
     it 'should download relative referenced cml files' do
       expected_files = []
-      expected_files << filename_for('resources/statesofmatter/statesOfMatterPage1.cml', File.join(SPEC_ROOT,'data','mw_model_relative.otml'))
+      expected_files << filename_for('resources/statesofmatter/statesOfMatterPage1.cml', File.join(@spec_root,'data','mw_model_relative.otml'))
       
       cache('mw_model_relative.otml', :activity => mockup('mw_model_relative.otml'))
       
@@ -308,7 +307,7 @@ describe 'DIY Local Cacher' do
   
   describe 'never cache' do
     it 'should always skip some references' do
-      url = File.join(SPEC_ROOT,'data','always_skip.otml')
+      url = File.join(@spec_root,'data','always_skip.otml')
       expected_filename = 'hash.otml'
       cache('always_skip.otml', :activity => mockup('always_skip.otml'))
       cache_size.should == 1

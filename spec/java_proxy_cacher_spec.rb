@@ -10,15 +10,13 @@ require 'fileutils'
 
 include FileUtils
 
-SPEC_ROOT = File.expand_path(File.dirname(__FILE__))
-
-
 describe 'Java Proxy Cacher' do
   include CacheHelper
   
   before(:each) do
     @klass = Concord::JavaProxyCacher
-    @cache = File.join(SPEC_ROOT, "..", 'tmp','java_proxy')
+    @spec_root = File.expand_path(File.dirname(__FILE__))
+    @cache = File.join(@spec_root, "..", 'tmp','java_proxy')
     mkdir_p(@cache)
     @cache += '/'
   end
@@ -35,7 +33,7 @@ describe 'Java Proxy Cacher' do
     end
   
     it 'should create a cached file of the original url' do
-      url = File.join(SPEC_ROOT,'data','empty.otml')
+      url = File.join(@spec_root,'data','empty.otml')
       expected_filename = ::Digest::SHA1.hexdigest(File.read(url))
       cache('empty.otml')
       cache_size.should == 3
@@ -43,7 +41,7 @@ describe 'Java Proxy Cacher' do
     end
   
     it 'should create a cached header of the original url' do
-      url = File.join(SPEC_ROOT,'data','empty.otml')
+      url = File.join(@spec_root,'data','empty.otml')
       expected_filename = ::Digest::SHA1.hexdigest(File.read(url))
       cache('empty.otml')
       cache_size.should == 3
@@ -53,7 +51,7 @@ describe 'Java Proxy Cacher' do
   
   describe 'error handling' do
     it 'should handle a bad url gracefully' do
-      url = File.join(SPEC_ROOT,'data','bad_url.otml')
+      url = File.join(@spec_root,'data','bad_url.otml')
       expected_filename = ::Digest::SHA1.hexdigest(File.read(url))
       
       lambda {
@@ -67,7 +65,7 @@ describe 'Java Proxy Cacher' do
     end
     
     it 'should handle a url with trailing spaces gracefully' do
-      url = File.join(SPEC_ROOT,'data','url_with_space.otml')
+      url = File.join(@spec_root,'data','url_with_space.otml')
       expected_filename = ::Digest::SHA1.hexdigest(File.read(url))
       
       lambda {
@@ -81,7 +79,7 @@ describe 'Java Proxy Cacher' do
     end
     
     it 'should handle an empty url gracefully' do
-      url = File.join(SPEC_ROOT,'data','empty_url.otml')
+      url = File.join(@spec_root,'data','empty_url.otml')
       expected_filename = ::Digest::SHA1.hexdigest(File.read(url))
       
       lambda {
@@ -198,7 +196,7 @@ describe 'Java Proxy Cacher' do
   
   describe 'never cache' do
     it 'should always skip some references' do
-      url = File.join(SPEC_ROOT,'data','always_skip.otml')
+      url = File.join(@spec_root,'data','always_skip.otml')
       expected_filename = ::Digest::SHA1.hexdigest(File.read(url))
       cache('always_skip.otml')
       cache_size.should == 3
