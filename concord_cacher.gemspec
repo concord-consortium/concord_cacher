@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 1.2") if s.respond_to? :required_rubygems_version=
   s.authors = ["Aaron Unger"]
   s.cert_chain = ["/Users/aunger/gem-public_cert.pem"]
-  s.date = %q{2010-03-26}
+  s.date = %q{2010-04-05}
   s.description = %q{concord_cacher provides support for locally caching a resource and all referenced resources in multiple different ways. It is intended for using with other Concord Consortium projects and not necessarily for outside projects.}
   s.email = %q{aunger @nospam@ concord.org}
   s.extra_rdoc_files = ["README.textile", "lib/concord_cacher.rb", "lib/concord/cacher.rb", "lib/concord/diy_local_cacher.rb", "lib/concord/java_proxy_cacher.rb"]
