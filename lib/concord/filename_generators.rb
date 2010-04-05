@@ -1,0 +1,2 @@
+module ::Concord::FilenameGenerators
+end

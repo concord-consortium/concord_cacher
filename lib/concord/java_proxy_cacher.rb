@@ -1,6 +1,10 @@
+require 'concord/cacher'
+
 class ::Concord::JavaProxyCacher < ::Concord::Cacher
   require 'digest/sha1'
   require 'concord/helper'
+  require 'concord/resource'
+  require 'concord/filename_generators/java_proxy_generator'
   
   include ::Concord::Helper
   
@@ -8,16 +12,8 @@ class ::Concord::JavaProxyCacher < ::Concord::Cacher
     ::Concord::Resource.create_map = true
     ::Concord::Resource.cache_headers = true
     ::Concord::Resource.rewrite_urls = false
+    ::Concord::Resource.filename_generator = ::Concord::FilenameGenerators::JavaProxyGenerator
     super
-  end
-  
-  def generate_main_filename
-    generate_filename(:content => @main_resource.content)
-  end
-  
-  def generate_filename(opts = {})
-    raise ::ArgumentError, "Must include :content key in opts" unless opts[:content]
-    ::Digest::SHA1.hexdigest(opts[:content])
   end
   
   def cache

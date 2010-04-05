@@ -3,22 +3,16 @@ class ::Concord::Cacher
   require 'open-uri'
   require 'cgi'
   require 'rexml/document'
-  
-  DEBUG = false
-  
+
   attr_reader :main_resource, :errors
   
   def initialize(opts = {})
-    defaults = {:rewrite_urls => false, :verbose => false}
-    opts = defaults.merge(opts)
     raise ArgumentError, "Must include :url, and :cache_dir in the options hash." unless opts[:url] && opts[:cache_dir]
-    @rewrite_urls = opts[:rewrite_urls]
-    
-    ::Concord::Resource.cacher = self
     
     @main_resource = Concord::Resource.new
-    @main_resource.url = opts[:url]
-    @main_resource.cache_dir = opts[:cache_dir]
+    @main_resource.url = opts.delete(:url)
+    @main_resource.cache_dir = opts.delete(:cache_dir)
+    @main_resource.extras = opts
     @main_resource.uri = URI.parse(@main_resource.url)
     @main_resource.load
     
@@ -54,19 +48,9 @@ class ::Concord::Cacher
 	  copy_otml_to_local_cache
 	  print_errors if ::Concord::Resource.verbose
 	end
-	
-	def generate_main_filename
-	  raise NotImplementedError, "You should be using this class through one of its sub-classes!"
-	end
-	
-	def generate_filename(opts = {})
-	  raise NotImplementedError, "You should be using this class through one of its sub-classes!"
-  end
   
   def copy_otml_to_local_cache
     # save the file in the local server directories
-    @main_resource.local_filename = generate_main_filename
-
     @main_resource.should_recurse = true
     @main_resource.content = @main_resource.process
     

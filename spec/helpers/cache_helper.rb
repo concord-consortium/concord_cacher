@@ -1,6 +1,6 @@
 module CacheHelper
   def cache(file, opts = {})
-    options = {:url => File.join(SPEC_ROOT,'data',file), :cache_dir => @cache, :verbose => false}.merge(opts)
+    options = {:url => File.join(SPEC_ROOT,'data',file), :cache_dir => @cache}.merge(opts)
     cacher = @klass.new(options)
     cacher.cache
   end

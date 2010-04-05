@@ -1,17 +1,17 @@
 class ::Concord::Resource
   require 'concord/helper'
+  require 'concord/filename_generators/default_generator'
   
   include ::Concord::Helper
   
   attr_accessor :uri,:url
-  attr_accessor :local_filename
+  @local_filename = nil
   @remote_filename = nil
   attr_accessor :content,:headers
-  attr_accessor :errors
   attr_accessor :parent
   attr_accessor :cache_dir
-  attr_accessor :errors
   attr_accessor :should_recurse
+  attr_accessor :extras
   
   SHORT_FILENAME_REGEX = /([^\/]+)$/
   
@@ -51,6 +51,7 @@ class ::Concord::Resource
   @url_map = {}
   @errors = {}
   @cacher = nil
+  @filename_generator = ::Concord::FilenameGenerators::DefaultGenerator
   class << self
     attr_accessor :debug
     attr_accessor :verbose
@@ -60,6 +61,7 @@ class ::Concord::Resource
     attr_reader   :url_map
     attr_reader   :errors
     attr_accessor :cacher
+    attr_accessor :filename_generator
   end
   
   def self.map(k,v)
@@ -114,6 +116,11 @@ class ::Concord::Resource
     @remote_filename = self.uri.path[SHORT_FILENAME_REGEX,1]
     @remote_filename = 'index.html' unless @remote_filename
     return @remote_filename
+  end
+  
+  def local_filename
+    return @local_filename if @local_filename
+    @local_filename = self.class.filename_generator.generate_filename(self)
   end
   
   def recursable?
@@ -181,7 +188,6 @@ class ::Concord::Resource
 				next
 			end
 
-      resource.local_filename = self.class.cacher.generate_filename(:content => resource.content, :url => resource.uri)
       line.sub!(resource.url,resource.local_filename.to_s) if self.class.rewrite_urls
       
       
