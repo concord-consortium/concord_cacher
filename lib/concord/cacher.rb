@@ -9,6 +9,9 @@ class ::Concord::Cacher
   def initialize(opts = {})
     raise ArgumentError, "Must include :url, and :cache_dir in the options hash." unless opts[:url] && opts[:cache_dir]
     
+    ::Concord::Resource.verbose = opts.delete(:verbose) || false
+    ::Concord::Resource.debug = opts.delete(:debug) || false
+    
     @main_resource = Concord::Resource.new
     @main_resource.url = opts.delete(:url)
     @main_resource.cache_dir = opts.delete(:cache_dir)
