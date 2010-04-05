@@ -101,8 +101,17 @@ class ::Concord::Resource
       self.headers = r.respond_to?("meta") ? r.meta : {}
       self.headers['_http_version'] = "HTTP/1.1 #{r.respond_to?("status") ? r.status.join(" ") : "200 OK"}"
       self.content = r.read
+      self.remove_codebase
     end
-    
+  end
+  
+  def has_codebase?
+    return false unless self.content
+    return self.content =~ /<otrunk[^>]+codebase[ ]?=[ ]?['"]([^'"]+)/
+  end
+  
+  def remove_codebase
+    self.content.sub!(/codebase[ ]?=[ ]?['"][^'"]+['"]/,"")
   end
   
   def process

@@ -20,28 +20,25 @@ class ::Concord::Cacher
 	end
 	
 	def calculate_main_file_absolute_url
-	  orig_uri = @main_resource.uri
+	  new_uri = @main_resource.uri
 	  codebase = ''
-	  if ((orig_uri.kind_of?(URI::HTTP) || orig_uri.kind_of?(URI::HTTPS)) && orig_uri.absolute?)
-      @main_resource.uri = orig_uri
-    else
-      # this probably references something on the local fs. we need to extract the document's codebase, if there is ony
-      if @main_resource.content =~ /<otrunk[^>]+codebase[ ]?=[ ]?['"]([^'"]+)/
-        codebase = "#{$1}"
-        @main_resource.content.sub!(/codebase[ ]?=[ ]?['"][^'"]+['"]/,"")
-        codebase.sub!(/\/$/,'')
-        codebase = "#{codebase}/#{@main_resource.remote_filename}" unless codebase =~ /otml$/
-        @main_resource.uri = URI.parse(codebase)
-      else
-        @main_resource.uri = orig_uri
-      end
+
+	  if _needs_codebase?(new_uri) && @main_resource.has_codebase?
+	    # this probably references something on the local fs. we need to extract the document's codebase, if there is ony
+      codebase = "#{$1}"
+      @main_resource.remove_codebase
+      codebase.sub!(/\/$/,'')
+      codebase = "#{codebase}/#{@main_resource.remote_filename}" unless codebase =~ /otml$/
+      new_uri = URI.parse(codebase)
     end
     
-    if @main_resource.uri.relative?
+    if new_uri.relative?
       # we need the main URI to be absolute so that we can use it to resolve references
       file_root = URI.parse("file:///")
-      @main_resource.uri = file_root.merge(@main_resource.uri)
+      new_uri = file_root.merge(new_uri)
     end
+    
+    @main_resource.uri = new_uri
   end
 	
 	def cache
@@ -64,5 +61,11 @@ class ::Concord::Cacher
         puts "    #{e}"
       end
     end
+  end
+  
+  private
+  
+  def _needs_codebase?(uri)
+    return ! ((uri.kind_of?(URI::HTTP) || uri.kind_of?(URI::HTTPS)) && uri.absolute?)
   end
 end
