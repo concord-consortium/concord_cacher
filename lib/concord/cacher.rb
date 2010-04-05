@@ -52,8 +52,7 @@ class ::Concord::Cacher
   def copy_otml_to_local_cache
     # save the file in the local server directories
     @main_resource.should_recurse = true
-    @main_resource.content = @main_resource.process
-    
+    @main_resource.process
     @main_resource.write
   end
   

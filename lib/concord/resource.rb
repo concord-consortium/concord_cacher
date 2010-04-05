@@ -1,6 +1,7 @@
 class ::Concord::Resource
   require 'concord/helper'
   require 'concord/filename_generators/default_generator'
+  require 'fileutils'
   
   include ::Concord::Helper
   
@@ -82,6 +83,15 @@ class ::Concord::Resource
     ::Concord::Resource.map(self.url, self.local_filename) if self.class.create_map
   end
   
+  # Reserving the file will prohibit any further references to this same file to be skipped, this avoiding endlessly recursing references
+  def reserve
+    FileUtils.touch(self.cache_dir + self.local_filename)
+  end
+  
+  def release
+    FileUtils.rm(self.cache_dir + @local_filename) if @local_filename
+  end
+  
   def exists?
     File.exists?(self.cache_dir + self.local_filename)
   end
@@ -104,7 +114,7 @@ class ::Concord::Resource
     end
 
     print ".\n" if self.class.verbose
-    return processed_lines.join("\n")
+    self.content = processed_lines.join("\n")
   end
   
   def always_skip?
@@ -159,42 +169,27 @@ class ::Concord::Resource
       match_indexes << match.begin(1)
       resource = Concord::Resource.new
       resource.url = match[1]
-      if _handle_resource(resource) && self.class.rewrite_urls
-        line.sub!(resource.url,resource.local_filename.to_s)
+      resource.cache_dir = self.cache_dir
+      catch :nextResource do
+        _handle_resource(resource)
+        line.sub!(resource.url,resource.local_filename.to_s) if self.class.rewrite_urls
       end
     end
     return line
   end
   
   def _handle_resource(resource)
-    resource.cache_dir = self.cache_dir
-    begin
-      # strip whitespace from the end of the match url, but don't alter the url so that when
-      # we replace the url later, we can, in essence, fix the malformed url 
-      resource.uri = URI.parse(CGI.unescapeHTML(resource.url.sub(/\s+$/,'')))
-    rescue
-      self.class.error(self.url, "Bad URL: '#{CGI.unescapeHTML(resource.url)}', skipping.")
-      print 'x' if self.class.verbose
-      return false
-    end
-    if (resource.uri.relative?)
-      # relative URL's need to have their parent document's codebase appended before trying to download
-      resource.uri = self.uri.merge(resource.url.sub(/\s+$/,''))
-    end
+    resource.headers = {}
+    _cleanup_uri(resource)
 
     if resource.always_skip?
       print "S" if self.class.verbose
-      return false
+      throw :nextResource
     end
     
-    resource.headers = {}
-  	begin
+  	_try(resource, lambda {
       resource.load
-		rescue OpenURI::HTTPError, Timeout::Error, Errno::ENOENT => e
-      self.class.error(self.url, "Problem getting file: #{resource.uri.to_s},   Error: #{e}")
-      print 'X' if self.class.verbose
-			return false
-		end
+    })
 
     # skip downloading already existing files.
     # because we're working with sha1 hashes we can be reasonably certain the content is a complete match
@@ -203,24 +198,47 @@ class ::Concord::Resource
     else
       # if it's an otml/html file, we should parse it too (only one level down)
       if (self.should_recurse? && resource.recursable?)
-					puts "recursively parsing '#{resource.uri.to_s}'" if self.class.debug
-					begin
-					  resource.write # touch the file so that we know not to try to re-process the file we're currently processing
-            resource.content = resource.process
-					rescue OpenURI::HTTPError => e
-            self.class.error(self.url,"Problem getting or writing file: #{resource.uri.to_s},   Error: #{e}")
-            print 'X' if self.class.verbose
-						next
-					end
+        _recurse(resource)
       end
-      begin
-        resource.write
-        print "." if self.class.verbose
-      rescue Exception => e
-        self.class.error(self.url,"Problem getting or writing file: #{resource.uri.to_s},   Error: #{e}")
-        print 'X' if self.class.verbose
-      end
+      _write(resource)
     end
-    return true
+  end
+  
+  def _cleanup_uri(resource)
+    _try(resource, lambda {
+      # strip whitespace from the end of the match url, but don't alter the url so that when
+      # we replace the url later, we can, in essence, fix the malformed url 
+      resource.uri = URI.parse(CGI.unescapeHTML(resource.url.sub(/\s+$/,'')))
+    })
+    if (resource.uri.relative?)
+      # relative URL's need to have their parent document's codebase appended before trying to download
+      resource.uri = self.uri.merge(resource.url.sub(/\s+$/,''))
+    end
+  end
+  
+  def _recurse(resource)
+    puts "recursively parsing '#{resource.uri.to_s}'" if self.class.debug
+		_try(resource, lambda {
+		  resource.reserve # touch the file so that we know not to try to re-process the file we're currently processing
+      resource.process
+    })
+	end
+	
+	def _write(resource)
+	  _try(resource, lambda {
+      resource.write
+      print "." if self.class.verbose
+    })
+  end
+  
+  def _try(resource, lam)
+    begin
+      lam.call
+    rescue => e
+      self.class.error(self.url,"Problem getting or writing file: #{resource.uri.to_s},   Error: #{e}")
+      print 'X' if self.class.verbose
+      resource.release
+      throw :nextResource
+    end
   end
 end
