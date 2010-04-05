@@ -57,8 +57,8 @@ class ::Concord::Resource
     attr_accessor :cache_headers
     attr_accessor :rewrite_urls
     attr_accessor :create_map
-    attr_accessor :url_map
-    attr_accessor :errors
+    attr_reader   :url_map
+    attr_reader   :errors
     attr_accessor :cacher
   end
   
