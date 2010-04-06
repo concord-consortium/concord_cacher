@@ -74,6 +74,14 @@ class ::Concord::Resource
     @errors[u] << str
   end
   
+  def self.clear_errors
+    @errors = {}
+  end
+  
+  def self.clear_map
+    @url_map = {}
+  end
+  
   def write
     File.open(self.cache_dir + self.local_filename, "w") do |f|
       f.write(self.content)

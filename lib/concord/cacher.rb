@@ -58,7 +58,8 @@ class ::Concord::Cacher
   
   def print_errors
     all_errors = ::Concord::Resource.errors
-    $stderr.puts "\nThere were #{all_errors.length} artifacts with errors.\n"
+    ::Concord::Resource.clear_errors
+    $stderr.puts "\nThere were #{all_errors.length} artifacts with errors when caching #{@main_resource.url}.\n"
     all_errors.each do |url,errors|
     	$stderr.puts "In #{url}:"
     	errors.uniq.each do |error|

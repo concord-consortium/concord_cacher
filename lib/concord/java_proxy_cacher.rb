@@ -24,6 +24,7 @@ class ::Concord::JavaProxyCacher < ::Concord::Cacher
   def write_url_to_hash_map
     load_existing_map if (File.exists?(@main_resource.cache_dir + "url_map.xml"))
     write_property_map(@main_resource.cache_dir + "url_map.xml", ::Concord::Resource.url_map)
+    ::Concord::Resource.clear_map
   end
   
   def load_existing_map
