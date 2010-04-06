@@ -12,6 +12,12 @@ class ::Concord::Cacher
     ::Concord::Resource.verbose = opts.delete(:verbose) || false
     ::Concord::Resource.debug = opts.delete(:debug) || false
     
+    create_map = opts.delete(:create_map)
+    ::Concord::Resource.create_map = create_map unless create_map == nil
+    
+    cache_headers = opts.delete(:cache_headers)
+    ::Concord::Resource.cache_headers = cache_headers unless cache_headers == nil
+    
     @main_resource = Concord::Resource.new
     @main_resource.url = opts.delete(:url)
     @main_resource.cache_dir = opts.delete(:cache_dir)
@@ -19,10 +25,18 @@ class ::Concord::Cacher
     @main_resource.uri = URI.parse(@main_resource.url)
     @main_resource.load
     
-    calculate_main_file_absolute_url
+    _calculate_main_file_absolute_url
 	end
 	
-	def calculate_main_file_absolute_url
+	def cache
+	  _copy_otml_to_local_cache
+	  _write_url_to_hash_map if ::Concord::Resource.create_map
+	  _print_errors if ::Concord::Resource.verbose
+	end
+	
+  private
+  
+  def _calculate_main_file_absolute_url
 	  new_uri = @main_resource.uri
 	  codebase = ''
 
@@ -43,20 +57,15 @@ class ::Concord::Cacher
     
     @main_resource.uri = new_uri
   end
-	
-	def cache
-	  copy_otml_to_local_cache
-	  print_errors if ::Concord::Resource.verbose
-	end
   
-  def copy_otml_to_local_cache
+  def _copy_otml_to_local_cache
     # save the file in the local server directories
     @main_resource.should_recurse = true
     @main_resource.process
     @main_resource.write
   end
   
-  def print_errors
+  def _print_errors
     all_errors = ::Concord::Resource.errors
     ::Concord::Resource.clear_errors
     $stderr.puts "\nThere were #{all_errors.length} artifacts with errors when caching #{@main_resource.url}.\n"
@@ -68,9 +77,24 @@ class ::Concord::Cacher
     end
   end
   
-  private
-  
   def _needs_codebase?(uri)
     return ! ((uri.kind_of?(URI::HTTP) || uri.kind_of?(URI::HTTPS)) && uri.absolute?)
+  end
+  
+  def _write_url_to_hash_map
+    _load_existing_map if (File.exists?(@main_resource.cache_dir + "url_map.xml"))
+    write_property_map(@main_resource.cache_dir + "url_map.xml", ::Concord::Resource.url_map)
+    ::Concord::Resource.clear_map
+  end
+  
+  def _load_existing_map
+    map_content = ::REXML::Document.new(File.new(@main_resource.cache_dir + "url_map.xml")).root
+    map_content.elements.each("entry") do |entry|
+      key = entry.attributes["key"]
+      if ! (::Concord::Resource.url_map.include? key)
+        value = entry.text
+        ::Concord::Resource.url_map[key] = value
+      end
+    end
   end
 end
