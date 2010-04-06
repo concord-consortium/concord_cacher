@@ -1,12 +1,8 @@
 require 'concord/cacher'
 
 class ::Concord::JavaProxyCacher < ::Concord::Cacher
-  require 'digest/sha1'
-  require 'concord/helper'
   require 'concord/resource'
   require 'concord/filename_generators/java_proxy_generator'
-  
-  include ::Concord::Helper
   
   def initialize(opts = {})
     ::Concord::Resource.create_map = true

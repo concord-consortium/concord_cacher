@@ -3,6 +3,9 @@ class ::Concord::Cacher
   require 'open-uri'
   require 'cgi'
   require 'rexml/document'
+  require 'concord/helper'
+  
+  include ::Concord::Helper
 
   attr_reader :main_resource, :errors
   
