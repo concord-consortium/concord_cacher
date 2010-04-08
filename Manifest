@@ -1,6 +1,7 @@
 Manifest
 README.textile
 Rakefile
+concord_cacher.gemspec
 lib/concord/cacher.rb
 lib/concord/diy_local_cacher.rb
 lib/concord/filename_generators.rb
@@ -70,6 +71,8 @@ spec/data/resources/statesofmatter/waterZoom.gif
 spec/data/resources/text.txt
 spec/data/standard_uri.otml
 spec/data/url_with_space.otml
+spec/data/xml_entities.otml
 spec/diy_local_cacher_spec.rb
 spec/helpers/cache_helper.rb
 spec/java_proxy_cacher_spec.rb
+xml_entities.otml
