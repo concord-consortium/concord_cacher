@@ -109,7 +109,7 @@ class ::Concord::Resource
       self.headers = r.respond_to?("meta") ? r.meta : {}
       self.headers['_http_version'] = "HTTP/1.1 #{r.respond_to?("status") ? r.status.join(" ") : "200 OK"}"
       self.content = r.read
-      self.remove_codebase
+      self.remove_codebase if self.class.rewrite_urls
     end
   end
   
