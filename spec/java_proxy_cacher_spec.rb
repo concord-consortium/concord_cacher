@@ -236,6 +236,15 @@ describe 'Java Proxy Cacher' do
       
       file_content.should match(/\n\n$/m)
     end
+    
+    it 'should find a src= reference when there is an absolute url on the same line' do
+      cache('flash_file.otml')
+      
+      cache_size.should == 13
+      
+      exists?('2e867d0a681370b8debb0a7981915c0f8f6de33b') # radishes.html
+      exists?('e04e4e2fdfb39c5b8776fa365bd9ac4fdb3851d5') # radishes.swf
+    end
   end
   
   describe 'url map' do

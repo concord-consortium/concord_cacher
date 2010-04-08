@@ -194,8 +194,7 @@ class ::Concord::Resource
   def _process_line(line)
     orig_line = line
     line = CGI.unescapeHTML(line)
-    match_indexes = []
-    while ( match = _line_matches(line) ) && (! match_indexes.include?(match.begin(1)))
+    while ( match = _line_matches(line) )
       print "\nMatched url: #{match[1]}: " if self.class.debug
       match_indexes << match.begin(1)
       resource = Concord::Resource.new
@@ -205,6 +204,7 @@ class ::Concord::Resource
         _handle_resource(resource)
         orig_line.sub!(resource.url,resource.local_filename.to_s) if self.class.rewrite_urls
       end
+      line.sub!(match[0],'')
     end
     return orig_line
   end
