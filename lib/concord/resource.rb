@@ -175,35 +175,36 @@ class ::Concord::Resource
   private
   
   def _line_matches(line)
-    return ( URL_REGEX.match(line) ||
-             SRC_REGEX.match(line) ||
-             _line_matches_by_file(line)
-      )
+    urls = line.scan(URL_REGEX)
+    urls += line.scan(SRC_REGEX)
+    urls += _line_matches_by_file(line)
+    
+    return urls.flatten.compact.uniq || []
   end
   
   def _line_matches_by_file(line)
     reg = FILE_SPECIFIC_REGEXES.detect{|r,v| r.match(self.remote_filename)}
     # reg[0] is the file regex, reg[1] is an array of regexes for that file type
     if reg
-      return reg[1].map{|r2| r2.match(line) }.compact.first
+      return reg[1].map{|r2| line.scan(r2) }
     else
-      return nil
+      return []
     end
   end
   
   def _process_line(line)
     orig_line = line
     line = CGI.unescapeHTML(line)
-    while ( match = _line_matches(line) )
+    matches = _line_matches(line)
+    matches.each do |match|
       print "\nMatched url: #{match[1]}: " if self.class.debug
       resource = Concord::Resource.new
-      resource.url = match[1]
+      resource.url = match
       resource.cache_dir = self.cache_dir
       catch :nextResource do
         _handle_resource(resource)
         orig_line.sub!(resource.url,resource.local_filename.to_s) if self.class.rewrite_urls
       end
-      line.sub!(match[0],'')
     end
     return orig_line
   end
