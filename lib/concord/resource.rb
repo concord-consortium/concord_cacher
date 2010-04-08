@@ -29,6 +29,7 @@ class ::Concord::Resource
   ALWAYS_SKIP_REGEXES = []
   ALWAYS_SKIP_REGEXES << Regexp.new(/^(mailto|jres)/i)
   ALWAYS_SKIP_REGEXES << Regexp.new(/http[s]?:\/\/.*?w3\.org\//i)
+  ALWAYS_SKIP_REGEXES << Regexp.new(/http[s]?:\/\/xml.apache.org\/xslt/i)
 
   RECURSE_ONCE_REGEX = /html$/i
   RECURSE_FOREVER_REGEX = /(otml|cml|mml|nlogo)$/i

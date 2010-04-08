@@ -311,6 +311,7 @@ describe 'DIY Local Cacher' do
       expected_filename = 'hash.otml'
       cache('always_skip.otml', :activity => mockup('always_skip.otml'))
       cache_size.should == 1
+      ::Concord::Resource.errors.size.should == 0
     end
   end
   
