@@ -196,7 +196,6 @@ class ::Concord::Resource
     line = CGI.unescapeHTML(line)
     while ( match = _line_matches(line) )
       print "\nMatched url: #{match[1]}: " if self.class.debug
-      match_indexes << match.begin(1)
       resource = Concord::Resource.new
       resource.url = match[1]
       resource.cache_dir = self.cache_dir
