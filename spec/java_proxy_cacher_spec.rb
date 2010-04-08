@@ -230,4 +230,26 @@ describe 'Java Proxy Cacher' do
     end
     
   end
+  
+  describe 'url map' do
+    it 'should always use absolute urls as keys' do
+      data_dir = File.join(@spec_root, 'data')
+      expected_entries = []
+      expected_entries << {:val => '836ba09d9d7288cf735f555e7a9b9b314ad2f6ef', :key => File.expand_path('element_reference.otml',data_dir)}
+      expected_entries << {:val => '20e89b62dda582d80e1832050f4998d64c801c03', :key => 'http://www.concord.org/~aunger/'}
+      expected_entries << {:val => '4e9576a56db3d142113b8905d7aa93e31c9f441b', :key => 'http://portal.concord.org/images/icons/chart_bar.png'}
+      expected_entries << {:val => '41f082b7e69a399679a47acfdcd7e7a204e49745', :key => 'http://portal.concord.org/images/icons/chart_pie.png'}
+      expected_entries << {:val => 'cbe7ac86926fd3b8aa8659842a1d8c299d8966a7', :key => File.expand_path('resources/text.txt',data_dir)}
+      expected_entries << {:val => '8f0ebcb45d7ba71a541d4781329f4a6900c7ee65', :key => File.expand_path('resources/delete.png',data_dir)}
+      expected_entries << {:val => 'd1cea238486aeeba9215d56bf71efc243754fe48', :key => File.expand_path('resources/chart_line.png',data_dir)}
+      
+      cache('element_reference.otml')
+      
+      url_map_content = File.read(File.expand_path('url_map.xml', @cache))
+      
+      expected_entries.each do |e|
+        url_map_content.should match(Regexp.new("<entry key='#{e[:key]}'>#{e[:val]}</entry>"))
+      end
+    end
+  end
 end

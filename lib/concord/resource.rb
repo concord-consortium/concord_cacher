@@ -88,7 +88,7 @@ class ::Concord::Resource
       f.flush
     end
     write_property_map(self.cache_dir + self.local_filename + ".hdrs", self.headers) if self.class.cache_headers
-    ::Concord::Resource.map(self.url, self.local_filename) if self.class.create_map
+    ::Concord::Resource.map(self.uri_str, self.local_filename) if self.class.create_map
   end
   
   # Reserving the file will prohibit any further references to this same file to be skipped, this avoiding endlessly recursing references
@@ -105,7 +105,7 @@ class ::Concord::Resource
   end
   
   def load
-    open(self.uri.scheme == 'file' ? self.uri.path : self.uri.to_s) do |r|
+    open(self.uri_str) do |r|
       self.headers = r.respond_to?("meta") ? r.meta : {}
       self.headers['_http_version'] = "HTTP/1.1 #{r.respond_to?("status") ? r.status.join(" ") : "200 OK"}"
       self.content = r.read
@@ -132,6 +132,11 @@ class ::Concord::Resource
 
     print ".\n" if self.class.verbose
     self.content = processed_lines.join("\n")
+  end
+  
+  def uri_str
+    return nil unless self.uri
+    self.uri.scheme == 'file' ? self.uri.path : self.uri.to_s
   end
   
   def always_skip?
@@ -235,7 +240,7 @@ class ::Concord::Resource
   end
   
   def _recurse(resource)
-    puts "recursively parsing '#{resource.uri.to_s}'" if self.class.debug
+    puts "recursively parsing '#{resource.uri_str}'" if self.class.debug
 		_try(resource, lambda {
 		  resource.reserve # touch the file so that we know not to try to re-process the file we're currently processing
       resource.process
@@ -253,7 +258,7 @@ class ::Concord::Resource
     begin
       lam.call
     rescue => e
-      self.class.error(self.url,"Problem getting or writing file: #{resource.uri.to_s},   Error: #{e}")
+      self.class.error(self.url,"Problem getting or writing file: #{resource.uri_str},   Error: #{e}")
       print 'X' if self.class.verbose
       resource.release
       throw :nextResource
