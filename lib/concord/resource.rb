@@ -270,6 +270,8 @@ class ::Concord::Resource
       print 'X' if self.class.verbose
       resource.release
       throw :nextResource
+    rescue Timeout::Error
+      retry
     end
   end
 end
