@@ -111,6 +111,7 @@ class ::Concord::Resource
       self.headers['_http_version'] = "HTTP/1.1 #{r.respond_to?("status") ? r.status.join(" ") : "200 OK"}"
       self.content = r.read
       self.remove_codebase if self.class.rewrite_urls
+      self.local_filename
     end
   end
   
@@ -126,13 +127,14 @@ class ::Concord::Resource
   def process
     print "\n#{self.remote_filename}: " if self.class.verbose
     processed_lines = []
+    ending_newlines = self.content[/([\n]+)$/m, 1]
     lines = self.content.split("\n")
     lines.each do |line|
       processed_lines << _process_line(line)
     end
 
     print ".\n" if self.class.verbose
-    self.content = processed_lines.join("\n")
+    self.content = processed_lines.join("\n") + (ending_newlines || '')
   end
   
   def uri_str

@@ -211,7 +211,7 @@ describe 'Java Proxy Cacher' do
   describe 'special cases' do
     it 'should not unencode xml entities that are not part of a url' do
       expected_files = []
-      expected_files << "b3dd880c1368ff9ed70cba3df3b81cd04bf77bdf" # xml_entities.otml
+      expected_files << "40f8f0e37503367ea32732b9a357722b6a750d0e" # xml_entities.otml
       expected_files << 'd1cea238486aeeba9215d56bf71efc243754fe48' # resources/chart_line.png
       expected_files << expected_files.collect{|f| f+".hdrs" } # headers for each file
       expected_files.flatten!
@@ -224,11 +224,18 @@ describe 'Java Proxy Cacher' do
         exists?(f)
       end
       
-      file_content = File.read(File.join(@cache,'b3dd880c1368ff9ed70cba3df3b81cd04bf77bdf'))
+      file_content = File.read(File.join(@cache,'40f8f0e37503367ea32732b9a357722b6a750d0e'))
 
       file_content.should match(Regexp.new('<OTText text="&lt;img src=&quot;http://portal.concord.org/images/icons/chart_line.png&quot; /&gt;" />'))      
     end
     
+    it 'should maintain newlines occurring at the end of the file' do
+      cache('xml_entities.otml')
+      
+      file_content = File.read(File.join(@cache,'40f8f0e37503367ea32732b9a357722b6a750d0e'))
+      
+      file_content.should match(/\n\n$/m)
+    end
   end
   
   describe 'url map' do
