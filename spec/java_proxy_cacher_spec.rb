@@ -258,5 +258,19 @@ describe 'Java Proxy Cacher' do
         url_map_content.should match(Regexp.new("<entry key='#{e[:key]}'>#{e[:val]}</entry>"))
       end
     end
+    
+    it 'should list both urls when the content is the same' do
+      expected_entries = []
+      expected_entries << {:key => 'http://udl.concord.org/artwork/elect_34/red_positive_charge/el_34_red_positive_charge.png', :val => '0cb63d1b4b57af2b8fa671854caa707da5390a80'}
+      expected_entries << {:key => 'http://udl.concord.org/artwork/elect_34/red_postive_charge/el_34_red_positive_charge.png', :val => '0cb63d1b4b57af2b8fa671854caa707da5390a80'}
+      
+      cache('same_content.otml')
+      
+      url_map_content = File.read(File.expand_path('url_map.xml', @cache))
+      
+      expected_entries.each do |e|
+        url_map_content.should match(Regexp.new("<entry key='#{e[:key]}'>#{e[:val]}</entry>"))
+      end
+    end
   end
 end

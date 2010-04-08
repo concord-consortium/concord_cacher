@@ -70,6 +70,10 @@ class ::Concord::Resource
     @url_map[k] = v
   end
   
+  def self.unmap(k)
+    @url_map.delete(k)
+  end
+  
   def self.error(u,str)
     @errors[u] ||= []
     @errors[u] << str
@@ -89,7 +93,7 @@ class ::Concord::Resource
       f.flush
     end
     write_property_map(self.cache_dir + self.local_filename + ".hdrs", self.headers) if self.class.cache_headers
-    ::Concord::Resource.map(self.uri_str, self.local_filename) if self.class.create_map
+    
   end
   
   # Reserving the file will prohibit any further references to this same file to be skipped, this avoiding endlessly recursing references
@@ -99,6 +103,7 @@ class ::Concord::Resource
   
   def release
     FileUtils.rm(self.cache_dir + @local_filename) if @local_filename
+    ::Concord::Resource.unmap(self.uri_str) if self.class.create_map
   end
   
   def exists?
@@ -110,9 +115,9 @@ class ::Concord::Resource
       self.headers = r.respond_to?("meta") ? r.meta : {}
       self.headers['_http_version'] = "HTTP/1.1 #{r.respond_to?("status") ? r.status.join(" ") : "200 OK"}"
       self.content = r.read
-      self.remove_codebase if self.class.rewrite_urls
-      self.local_filename
     end
+    self.remove_codebase if self.class.rewrite_urls
+    ::Concord::Resource.map(self.uri_str, self.local_filename) if self.class.create_map
   end
   
   def has_codebase?

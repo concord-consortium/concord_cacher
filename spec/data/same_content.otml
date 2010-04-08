@@ -1,0 +1,16 @@
+<otrunk id="67daad67-8762-4f5a-8c7c-50b7c3544c0b">
+  <imports>
+    <import class="org.concord.otrunk.OTSystem" />
+  </imports>
+  <objects>  
+    <OTSystem local_id="system">
+      <root>
+        <OTText>
+          <!-- Two urls with the same content -->
+          <img src="http://udl.concord.org/artwork/elect_34/red_positive_charge/el_34_red_positive_charge.png" />
+          <img src="http://udl.concord.org/artwork/elect_34/red_postive_charge/el_34_red_positive_charge.png" />
+        </OTText>
+      </root>
+    </OTSystem>
+  </objects>
+</otrunk>
