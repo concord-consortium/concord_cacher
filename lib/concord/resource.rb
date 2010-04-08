@@ -179,6 +179,7 @@ class ::Concord::Resource
   end
   
   def _process_line(line)
+    orig_line = line
     line = CGI.unescapeHTML(line)
     match_indexes = []
     while ( match = _line_matches(line) ) && (! match_indexes.include?(match.begin(1)))
@@ -189,10 +190,10 @@ class ::Concord::Resource
       resource.cache_dir = self.cache_dir
       catch :nextResource do
         _handle_resource(resource)
-        line.sub!(resource.url,resource.local_filename.to_s) if self.class.rewrite_urls
+        orig_line.sub!(resource.url,resource.local_filename.to_s) if self.class.rewrite_urls
       end
     end
-    return line
+    return orig_line
   end
   
   def _handle_resource(resource)

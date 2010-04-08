@@ -318,4 +318,23 @@ describe 'DIY Local Cacher' do
     it 'should only recurse html files once'
     it 'should recurse otml,cml,mml and nlogo files forever'
   end
+  
+  describe 'special cases' do
+    it 'should not unencode xml entities that are not part of a url' do
+      expected_files = []
+      expected_files << "hash.otml" # xml_entities.otml
+      expected_files << filename_for("http://portal.concord.org/images/icons/chart_line.png")
+      
+      cache('xml_entities.otml', :activity => mockup('xml_entities.otml'))
+
+      cache_size.should == 2
+      expected_files.each do |f|
+        exists?(f)
+      end
+      
+      file_content = File.read(File.join(@cache,'hash.otml'))
+
+      file_content.should match(Regexp.new("<OTText text=\"&lt;img src=&quot;#{filename_for("http://portal.concord.org/images/icons/chart_line.png")}&quot; /&gt;\" />"))      
+    end
+  end
 end

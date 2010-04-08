@@ -207,4 +207,27 @@ describe 'Java Proxy Cacher' do
     it 'should only recurse html files once'
     it 'should recurse otml,cml,mml and nlogo files forever'
   end
+  
+  describe 'special cases' do
+    it 'should not unencode xml entities that are not part of a url' do
+      expected_files = []
+      expected_files << "b3dd880c1368ff9ed70cba3df3b81cd04bf77bdf" # xml_entities.otml
+      expected_files << 'd1cea238486aeeba9215d56bf71efc243754fe48' # resources/chart_line.png
+      expected_files << expected_files.collect{|f| f+".hdrs" } # headers for each file
+      expected_files.flatten!
+      expected_files << 'url_map.xml'
+      
+      cache('xml_entities.otml')
+
+      cache_size.should == 5
+      expected_files.each do |f|
+        exists?(f)
+      end
+      
+      file_content = File.read(File.join(@cache,'b3dd880c1368ff9ed70cba3df3b81cd04bf77bdf'))
+
+      file_content.should match(Regexp.new('<OTText text="&lt;img src=&quot;http://portal.concord.org/images/icons/chart_line.png&quot; /&gt;" />'))      
+    end
+    
+  end
 end
