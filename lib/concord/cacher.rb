@@ -16,10 +16,14 @@ class ::Concord::Cacher
     ::Concord::Resource.debug = opts.delete(:debug) || false
     
     create_map = opts.delete(:create_map)
-    ::Concord::Resource.create_map = create_map unless create_map == nil
+    ::Concord::Resource.create_map = create_map unless create_map.nil?
     
     cache_headers = opts.delete(:cache_headers)
-    ::Concord::Resource.cache_headers = cache_headers unless cache_headers == nil
+    ::Concord::Resource.cache_headers = cache_headers unless cache_headers.nil?
+    
+    relative_hosts = opts.delete(:relative)
+    relative_hosts = [] if relative_hosts.nil?
+    ::Concord::Resource.relative_hosts = relative_hosts 
     
     @main_resource = Concord::Resource.new
     @main_resource.url = opts.delete(:url)

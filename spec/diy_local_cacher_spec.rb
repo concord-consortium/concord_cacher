@@ -101,6 +101,16 @@ describe 'DIY Local Cacher' do
       file_content.should match(filename_for('http://portal.concord.org/images/icons/delete.png'))
       file_content.should match(filename_for('https://mail.google.com/mail/images/2/5/mountains/base/gmail_solid_white.png'))
     end
+    
+    it 'should only make some urls relative' do
+      cache('standard_uri.otml', :activity => mockup('standard_uri.otml'), :relative => ['portal.concord.org'])
+      
+      file_content = File.read(File.join(@cache,'hash.otml'))
+      
+      file_content.should_not match(/http:/)
+      file_content.should match('/images/icons/delete.png')
+      file_content.should match(filename_for('https://mail.google.com/mail/images/2/5/mountains/base/gmail_solid_white.png'))
+    end
   end
   
   describe 'element references syntax' do

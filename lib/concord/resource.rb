@@ -54,6 +54,7 @@ class ::Concord::Resource
   @errors = {}
   @cacher = nil
   @filename_generator = ::Concord::FilenameGenerators::DefaultGenerator
+  @relative_hosts = []
   class << self
     attr_accessor :debug
     attr_accessor :verbose
@@ -64,6 +65,7 @@ class ::Concord::Resource
     attr_reader   :errors
     attr_accessor :cacher
     attr_accessor :filename_generator
+    attr_accessor :relative_hosts
   end
   
   def self.map(k,v)
@@ -160,7 +162,14 @@ class ::Concord::Resource
   
   def local_filename
     return @local_filename if @local_filename
-    @local_filename = self.class.filename_generator.generate_filename(self)
+    if (self.relativize_only?)
+      @local_filename = self.uri.path
+      @local_filename << "?#{self.uri.query}" if self.uri.query
+      @local_filename << "##{self.uri.fragment}" if self.uri.fragment
+    else
+      @local_filename = self.class.filename_generator.generate_filename(self)
+    end
+    return @local_filename
   end
   
   def recursable?
@@ -169,6 +178,11 @@ class ::Concord::Resource
   
   def should_recurse?
     return true if self.should_recurse || RECURSE_FOREVER_REGEX.match(self.remote_filename)
+    return false
+  end
+  
+  def relativize_only?
+    return true if ::Concord::Resource.relative_hosts.include?(self.uri.host.to_s)
     return false
   end
   
@@ -221,6 +235,11 @@ class ::Concord::Resource
   	_try(resource, lambda {
       resource.load
     })
+    
+    if resource.relativize_only?
+      print 'r' if self.class.verbose
+      return
+    end
 
     # skip downloading already existing files.
     # because we're working with sha1 hashes we can be reasonably certain the content is a complete match
