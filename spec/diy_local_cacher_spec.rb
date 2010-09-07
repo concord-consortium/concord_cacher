@@ -1,10 +1,10 @@
 begin
   require 'concord_cacher'
 rescue LoadError
-  require File.join(File.dirname(__FILE__), '..','lib','concord.rb')
+  require File.expand_path(File.join(File.dirname(__FILE__), '..','lib','concord.rb'))
 end
 
-require File.join(File.dirname(__FILE__),'helpers','cache_helper.rb')
+require File.expand_path(File.join(File.dirname(__FILE__),'helpers','cache_helper.rb'))
 
 require 'fileutils'
 
