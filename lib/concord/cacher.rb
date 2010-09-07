@@ -23,6 +23,7 @@ class ::Concord::Cacher
     
     relative_hosts = opts.delete(:relative)
     relative_hosts = [] if relative_hosts.nil?
+    relative_hosts = [relative_hosts] unless relative_hosts.kind_of? Array
     ::Concord::Resource.relative_hosts = relative_hosts 
     
     @main_resource = Concord::Resource.new

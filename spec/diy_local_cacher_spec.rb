@@ -102,7 +102,7 @@ describe 'DIY Local Cacher' do
       file_content.should match(filename_for('https://mail.google.com/mail/images/2/5/mountains/base/gmail_solid_white.png'))
     end
     
-    it 'should only make some urls relative' do
+    it 'should make some urls relative' do
       cache('standard_uri.otml', :activity => mockup('standard_uri.otml'), :relative => ['portal.concord.org'])
       
       file_content = File.read(File.join(@cache,'hash.otml'))
@@ -249,6 +249,18 @@ describe 'DIY Local Cacher' do
         exists?(f)
       end
     end
+    
+    it 'should not recurse relativized urls' do
+      unexpected_files = []
+      unexpected_files << filename_for('http://otrunk.concord.org/examples/LOOPS/models/statesofmatter/statesOfMatterPage1.cml')
+      unexpected_files << filename_for('http://otrunk.concord.org/examples/LOOPS/models/statesofmatter/statesOfMatterPage1$0.mml')
+      
+      cache('mw_model_absolute.otml', :activity => mockup('mw_model_absolute.otml'), :relative => ['otrunk.concord.org'])
+      
+      unexpected_files.each do |f|
+        does_not_exist?(f)
+      end
+    end
   end
   
   describe 'embedded nlogo files' do
@@ -346,6 +358,18 @@ describe 'DIY Local Cacher' do
       file_content = File.read(File.join(@cache,'hash.otml'))
 
       file_content.should match(Regexp.new("<OTText text=\"&lt;img src=&quot;#{filename_for("http://portal.concord.org/images/icons/chart_line.png")}&quot; /&gt;\" />"))      
+    end
+    
+    it 'should not cause problems to specify one relative host as a string instead of an array' do
+      unexpected_files = []
+      unexpected_files << filename_for('http://otrunk.concord.org/examples/LOOPS/models/statesofmatter/statesOfMatterPage1.cml')
+      unexpected_files << filename_for('http://otrunk.concord.org/examples/LOOPS/models/statesofmatter/statesOfMatterPage1$0.mml')
+      
+      cache('mw_model_absolute.otml', :activity => mockup('mw_model_absolute.otml'), :relative => 'otrunk.concord.org')
+      
+      unexpected_files.each do |f|
+        does_not_exist?(f)
+      end
     end
   end
 end
