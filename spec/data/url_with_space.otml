@@ -6,7 +6,7 @@
     <OTSystem local_id="system">
       <root>
         <OTText>
-          <img src='http://portal.concord.org/images/icons/chart_line.png ' />
+          <img src=' http://portal.concord.org/images/icons/chart_line.png '/>
         </OTText>
       </root>
     </OTSystem>

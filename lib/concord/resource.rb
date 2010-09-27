@@ -258,7 +258,7 @@ class ::Concord::Resource
     _try(resource, lambda {
       # strip whitespace from the end of the match url, but don't alter the url so that when
       # we replace the url later, we can, in essence, fix the malformed url 
-      resource.uri = URI.parse(CGI.unescapeHTML(resource.url.sub(/\s+$/,'')))
+      resource.uri = URI.parse(CGI.unescapeHTML(resource.url.strip))
     })
     if (resource.uri.relative?)
       # relative URL's need to have their parent document's codebase appended before trying to download
