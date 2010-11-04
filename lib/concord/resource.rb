@@ -21,10 +21,10 @@ class ::Concord::Resource
   #   we should switch to using named groups to allow more complex regex matchers
   # !!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
-  URL_REGEX = /(http[s]?:\/\/[^'"]+)/i
+  URL_REGEX = /(http[s]?:\/\/[^'"<>]+)/i
   # the imageBytes can be referenced by a OTImage object
   # MW and Netlogo models use authoredDataURL attributes
-  SRC_REGEX = /(?:src|href|imageBytes|authoredDataURL)[ ]?=[ ]?['"](.+?)['"]/i
+  SRC_REGEX = /(?:src|href|imageBytes|authoredDataURL)[ ]?=[ ]?['"](.+?)['"<>]/i
 
   ALWAYS_SKIP_REGEXES = []
   ALWAYS_SKIP_REGEXES << Regexp.new(/^(mailto|jres)/i)

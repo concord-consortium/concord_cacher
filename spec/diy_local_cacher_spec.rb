@@ -371,5 +371,17 @@ describe 'DIY Local Cacher' do
         does_not_exist?(f)
       end
     end
+
+    it 'should not include trailing </string> when url is part of resource list or map' do
+      expected_files = []
+      expected_files << filename_for('http://portal.concord.org/images/icons/chart_line.png')
+
+      cache('urls_in_resource_list.otml', :activity => mockup('urls_in_resource_list.otml'))
+
+      cache_size.should == 1
+      expected_files.each do |f|
+        exists?(f)
+      end
+    end
   end
 end
