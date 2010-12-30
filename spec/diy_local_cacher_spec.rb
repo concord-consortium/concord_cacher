@@ -376,7 +376,7 @@ describe 'DIY Local Cacher' do
       expected_files = []
       expected_files << filename_for('http://portal.concord.org/images/icons/chart_line.png')
 
-      cache('urls_in_resource_list.otml', :activity => mockup('urls_in_resource_list.otml'))
+      cache('urls_in_resourcelist.otml', :activity => mockup('urls_in_resourcelist.otml'))
 
       cache_size.should == 1
       expected_files.each do |f|
