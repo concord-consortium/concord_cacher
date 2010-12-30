@@ -17,12 +17,9 @@ describe 'DIY Local Cacher' do
     @klass = Concord::DiyLocalCacher
     @spec_root = File.expand_path(File.dirname(__FILE__))
     @cache = File.join(@spec_root, '..', 'tmp','diy_local')
+    rm_rf(@cache)
     mkdir_p(@cache)
     @cache += '/'
-  end
-  
-  after(:each) do
-    rm_rf(@cache)
   end
   
   def mockup(file)
@@ -374,11 +371,12 @@ describe 'DIY Local Cacher' do
 
     it 'should not include trailing </string> when url is part of resource list or map' do
       expected_files = []
+      expected_files << "hash.otml"
       expected_files << filename_for('http://portal.concord.org/images/icons/chart_line.png')
 
       cache('urls_in_resourcelist.otml', :activity => mockup('urls_in_resourcelist.otml'))
 
-      cache_size.should == 1
+      cache_size.should == 2
       expected_files.each do |f|
         exists?(f)
       end
