@@ -5,6 +5,7 @@ Gem::Specification.new do |s|
   s.version = "0.1.13"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 1.2") if s.respond_to? :required_rubygems_version=
+  s.required_ruby_version = '~> 1.8.7'
   s.authors = ["Aaron Unger"]
   s.cert_chain = ["/Users/aunger/gem-public_cert.pem"]
   s.date = %q{2010-11-04}
