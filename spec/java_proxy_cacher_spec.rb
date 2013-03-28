@@ -187,11 +187,11 @@ describe 'Java Proxy Cacher' do
   end
   
   describe 'embedded nlogo files' do
-    it 'should correctly download resources referenced from within netlogo model files'
+    xit 'should correctly download resources referenced from within netlogo model files'
   end
   
   describe 'embedded mw files' do
-    it 'should correctly download resources referenced from within mw model files'
+    xit 'should correctly download resources referenced from within mw model files'
   end
   
   describe 'never cache' do
@@ -222,8 +222,8 @@ describe 'Java Proxy Cacher' do
   end
   
   describe 'recursion limits' do
-    it 'should only recurse html files once'
-    it 'should recurse otml,cml,mml and nlogo files forever'
+    xit 'should only recurse html files once'
+    xit 'should recurse otml,cml,mml and nlogo files forever'
   end
   
   describe 'special cases' do

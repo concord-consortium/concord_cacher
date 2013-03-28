@@ -283,7 +283,7 @@ describe 'DIY Local Cacher' do
       end
     end
     
-    it 'should correctly download resources referenced from within netlogo model files'
+    xit 'should correctly download resources referenced from within netlogo model files'
   end
   
   describe 'embedded mw files' do
@@ -320,8 +320,8 @@ describe 'DIY Local Cacher' do
       end
     end
     
-    it 'should correctly download images referenced from within mw cml files'
-    it 'should correctly download images referenced from within mml files'
+    xit 'should correctly download images referenced from within mw cml files'
+    xit 'should correctly download images referenced from within mml files'
   end
   
   describe 'never cache' do
@@ -335,8 +335,8 @@ describe 'DIY Local Cacher' do
   end
   
   describe 'recursion limits' do
-    it 'should only recurse html files once'
-    it 'should recurse otml,cml,mml and nlogo files forever'
+    xit 'should only recurse html files once'
+    xit 'should recurse otml,cml,mml and nlogo files forever'
   end
   
   describe 'special cases' do
