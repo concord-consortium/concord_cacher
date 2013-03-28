@@ -2,3 +2,5 @@ tmp/*
 pkg/*
 hudson/*
 .rvmrc
+.bundle
+*.gem
