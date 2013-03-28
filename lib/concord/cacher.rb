@@ -25,6 +25,10 @@ class ::Concord::Cacher
     relative_hosts = [] if relative_hosts.nil?
     relative_hosts = [relative_hosts] unless relative_hosts.kind_of? Array
     ::Concord::Resource.relative_hosts = relative_hosts 
+
+    custom_skips = opts.delete(:skip) || []
+    custom_skips = [custom_skips] unless custom_skips.kind_of?(Array)
+    ::Concord::Resource.custom_skips = custom_skips
     
     @main_resource = Concord::Resource.new
     @main_resource.url = opts.delete(:url)

@@ -201,6 +201,24 @@ describe 'Java Proxy Cacher' do
       cache('always_skip.otml')
       cache_size.should == 3
     end
+
+    it 'should skip files when instructed to' do
+      expected_files = []
+      expected_files << 'dbbd46b446a205047cfbf32e7af350a73c38848d' # recursion.otml
+      expected_files << 'cdc3d425b0ac9c3e89e1b79e0ad8a07c09bcedbd' # resources/recurse1.otml
+      expected_files << '8f0ebcb45d7ba71a541d4781329f4a6900c7ee65' # resources/delete.png
+      expected_files << expected_files.collect{|f| f+".hdrs" } # headers for each file
+      expected_files.flatten!
+      expected_files << 'url_map.xml'
+
+      cache('recursion.otml', :skip => [/recurse2\.otml$/])
+
+      cache_size.should == 7
+      expected_files.each do |f|
+        exists?(f)
+      end
+    end
+
   end
   
   describe 'recursion limits' do

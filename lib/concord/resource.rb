@@ -55,6 +55,7 @@ class ::Concord::Resource
   @cacher = nil
   @filename_generator = ::Concord::FilenameGenerators::DefaultGenerator
   @relative_hosts = []
+  @custom_skips = []
   class << self
     attr_accessor :debug
     attr_accessor :verbose
@@ -66,6 +67,7 @@ class ::Concord::Resource
     attr_accessor :cacher
     attr_accessor :filename_generator
     attr_accessor :relative_hosts
+    attr_accessor :custom_skips
   end
   
   def self.map(k,v)
@@ -149,8 +151,11 @@ class ::Concord::Resource
     self.uri.scheme == 'file' ? self.uri.path : self.uri.to_s
   end
   
-  def always_skip?
-    return (self.url.length < 1) || ALWAYS_SKIP_REGEXES.detect{|r| r.match(self.url) }
+  def skip?
+    return true if self.url.length < 1
+    return true if self.class.custom_skips.detect{|r| r.match(self.url) }
+    return true if ALWAYS_SKIP_REGEXES.detect{|r| r.match(self.url) }
+    return false
   end
   
   def remote_filename
@@ -227,7 +232,7 @@ class ::Concord::Resource
     resource.headers = {}
     _cleanup_uri(resource)
 
-    if resource.always_skip?
+    if resource.skip?
       print "S" if self.class.verbose
       throw :nextResource
     end
