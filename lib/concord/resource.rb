@@ -32,7 +32,7 @@ class ::Concord::Resource
   ALWAYS_SKIP_REGEXES << Regexp.new(/http[s]?:\/\/xml.apache.org\/xslt/i)
 
   RECURSE_ONCE_REGEX = /html$/i
-  RECURSE_FOREVER_REGEX = /(otml|cml|mml|nlogo)$/i
+  RECURSE_FOREVER_REGEX = /(otml|cml|mml|nlogo|config)$/i
   
   FILE_SPECIFIC_REGEXES = {}
   # These regexes will only match within a file that ends with .nlogo

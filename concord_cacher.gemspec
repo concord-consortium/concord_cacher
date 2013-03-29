@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{concord_cacher}
-  s.version = "0.1.14"
+  s.version = "0.1.15"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 1.2") if s.respond_to? :required_rubygems_version=
   s.required_ruby_version = '~> 1.8.7'
